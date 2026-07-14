@@ -191,9 +191,12 @@ function applyRouteHead(html, r) {
   html = setTag(html, 'property=("|\')og:description\\1', `<meta property="og:description" content="${escAttr(r.description)}">`);
   html = setTag(html, 'name=("|\')twitter:title\\1', `<meta name="twitter:title" content="${escAttr(r.title)}">`);
   html = setTag(html, 'name=("|\')twitter:description\\1', `<meta name="twitter:description" content="${escAttr(r.description)}">`);
-  // FAQPage structured data only belongs on the FAQ page and home; drop it elsewhere.
+  // FAQPage structured data only belongs on the FAQ page and home; drop it
+  // elsewhere. The (?!</script>) guard keeps the match INSIDE the FAQPage's own
+  // <script> — without it the match starts at the earlier LocalBusiness script
+  // and deletes that too.
   if (!r.faq) {
-    html = html.replace(/<script type="application\/ld\+json">\s*\{[^]*?"@type":\s*"FAQPage"[^]*?<\/script>/i, '');
+    html = html.replace(/<script type="application\/ld\+json">(?:(?!<\/script>)[\s\S])*?"@type":\s*"FAQPage"(?:(?!<\/script>)[\s\S])*?<\/script>/i, '');
   }
   return html;
 }

@@ -36,14 +36,19 @@ function injectSeoHead(html, seoHead) {
     return '<html lang="en"' + (attrs || '') + '>';
   });
 
-  // 2) Inject the crawler-facing head block once, just before </head>.
-  if (html.indexOf('abc-seo-start') === -1) {
-    const head = (seoHead != null
-      ? seoHead
-      : fs.readFileSync(path.join(__dirname, 'seo-head.html'), 'utf8')
-    ).trim();
-    html = html.replace(/<\/head>/i,
-      '<!--abc-seo-start-->\n' + head + '\n<!--abc-seo-end-->\n</head>');
+  // 2) Inject the crawler-facing head block, or REFRESH it if already present.
+  // A committed index.html may carry a stale block from an earlier in-place run
+  // (or a fresh design export may carry none), so seo-head.html must always win
+  // — otherwise edits to it silently never reach the built pages.
+  const head = (seoHead != null
+    ? seoHead
+    : fs.readFileSync(path.join(__dirname, 'seo-head.html'), 'utf8')
+  ).trim();
+  const block = '<!--abc-seo-start-->\n' + head + '\n<!--abc-seo-end-->';
+  if (/<!--abc-seo-start-->[\s\S]*?<!--abc-seo-end-->/.test(html)) {
+    html = html.replace(/<!--abc-seo-start-->[\s\S]*?<!--abc-seo-end-->/, () => block);
+  } else {
+    html = html.replace(/<\/head>/i, block + '\n</head>');
   }
   return html;
 }
