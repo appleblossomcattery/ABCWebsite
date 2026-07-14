@@ -12,7 +12,13 @@
 
 [build]
   publish = "dist"
-  command = "node prerender.js"
+  # Install Chromium explicitly before pre-rendering. Puppeteer's post-install
+  # download only runs when npm actually installs the package; once Netlify
+  # restores node_modules from its build cache, that step is skipped and the
+  # Chromium binary (kept in .cache/puppeteer, which Netlify does not cache) is
+  # missing. Running the browser install in the build command guarantees it is
+  # present on every build; it is idempotent (a no-op once downloaded).
+  command = "npx puppeteer browsers install chrome && node prerender.js"
 
 [functions]
   directory = "netlify/functions"

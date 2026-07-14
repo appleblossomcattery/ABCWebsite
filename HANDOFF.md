@@ -26,9 +26,10 @@ No third-party platforms beyond ones already in play: **GitHub** (repo), **Netli
 
 **B. Connect the repo to Netlify**
 1. Netlify → **Add new site → Import an existing project → GitHub** → pick the repo.
-2. Build command: **`node prerender.js`**  ·  Publish directory: **`dist`**  (both are already in
-   `netlify.toml`, so just accept them). Netlify runs `npm install` first, which downloads the
-   headless Chromium the pre-render needs.
+2. Build command: **`npx puppeteer browsers install chrome && node prerender.js`**  ·  Publish
+   directory: **`dist`**  (both are already in `netlify.toml`, so just accept them). The browser
+   install is explicit because Netlify caches `node_modules` but not Puppeteer's Chromium, so the
+   post-install download would otherwise be skipped on cached builds.
 3. **Deploy site.**
 
 **C. Set environment variables** (Netlify → Site configuration → Environment variables):
