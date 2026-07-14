@@ -44,11 +44,13 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const puppeteer = require('puppeteer');
+const sharp = require('sharp');
 const { injectSeoHead } = require('./postbuild');
 const { BASE_URL, ROUTES } = require('./routes');
 
 const ROOT = __dirname;
 const DIST = path.join(ROOT, 'dist');
+const GALLERY_DIR = path.join(ROOT, 'gallery');
 const PORT = 8799;
 
 const escAttr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -106,6 +108,61 @@ function migrateImages(html) {
   html = html.split('https://static.wixstatic.com/media/').join('/images/lg/');
   html = html.split('//static.wixstatic.com/media/').join('/images/lg/');
   html = html.split(LIGHTBOX_MID).join('#');
+  return html;
+}
+
+// ---- folder-driven gallery ------------------------------------------------
+// Drop ordinary photos into gallery/ (order = filename order, e.g. 01-…,
+// 02-…). This resizes each into a 600x600 grid thumbnail (dist/images/gallery/)
+// and a ≤1600px lightbox version (dist/images/lg/gallery/), and replaces the
+// design bundle's hard-coded `images = [...]` list with entries generated from
+// the folder. So adding, removing, replacing or reordering gallery photos is
+// just managing files — no design tool, no cryptic IDs. Alt text (used for
+// accessibility + SEO) is derived from the filename. If gallery/ is empty the
+// design's built-in photos are kept unchanged.
+const GALLERY_EXT = /\.(jpe?g|png|webp|gif)$/i;
+function galleryAlt(file) {
+  return file
+    .replace(/\.[^.]+$/, '')      // drop extension
+    .replace(/^\d+[-_ ]*/, '')    // drop the NN- ordering prefix
+    .replace(/[-_]+/g, ' ')       // dashes/underscores → spaces
+    .trim()
+    .replace(/^./, (c) => c.toUpperCase()) || 'Apple Blossom Cattery photo';
+}
+async function buildGallery(html) {
+  if (!fs.existsSync(GALLERY_DIR)) { console.log("  gallery/: not present — keeping the design's built-in photos"); return html; }
+  const files = fs.readdirSync(GALLERY_DIR).filter((f) => GALLERY_EXT.test(f)).sort();
+  if (!files.length) { console.log("  gallery/: empty — keeping the design's built-in photos"); return html; }
+
+  const thumbDir = path.join(DIST, 'images', 'gallery');
+  const largeDir = path.join(DIST, 'images', 'lg', 'gallery');
+  fs.mkdirSync(thumbDir, { recursive: true });
+  fs.mkdirSync(largeDir, { recursive: true });
+
+  for (const f of files) {
+    const src = path.join(GALLERY_DIR, f);
+    if (/\.gif$/i.test(f)) {
+      // Preserve animation — copy the gif untouched to both sizes.
+      fs.copyFileSync(src, path.join(thumbDir, f));
+      fs.copyFileSync(src, path.join(largeDir, f));
+    } else {
+      // .rotate() honours EXIF orientation (phone photos); cover-crop the
+      // square grid tile, fit the lightbox within 1600x1200 without enlarging.
+      await sharp(src).rotate().resize(600, 600, { fit: 'cover', position: 'attention' }).toFile(path.join(thumbDir, f));
+      await sharp(src).rotate().resize(1600, 1200, { fit: 'inside', withoutEnlargement: true }).toFile(path.join(largeDir, f));
+    }
+  }
+
+  // Alt text is single-quoted in the bundle; strip any apostrophes to stay safe.
+  const entries = files.map((f) => `{ id:'gallery/${f}', alt:'${galleryAlt(f).replace(/'/g, '')}' }`).join(',');
+  if (!/images = \[.*?\];/s.test(html)) {
+    throw new Error(
+      'buildGallery: could not find the gallery `images = [...]` array in the bundle. ' +
+      'The design export structure changed — update the replace in prerender.js (or remove gallery/ to fall back to the design photos).',
+    );
+  }
+  html = html.replace(/images = \[.*?\];/s, () => 'images = [' + entries + '];');
+  console.log(`  gallery/: ${files.length} photos → resized + injected (grid 600px, lightbox 1600px)`);
   return html;
 }
 
@@ -207,13 +264,15 @@ function cleanDcRoot(rawHtml) {
 async function main() {
   const srcIndex = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const seoHead = fs.readFileSync(path.join(ROOT, 'seo-head.html'), 'utf8');
-  const base = migrateImages(injectSeoHead(srcIndex, seoHead));
+  let base = migrateImages(injectSeoHead(srcIndex, seoHead));
 
-  // Fresh dist; self-host the migrated images, then write the base bundle so the
-  // render server can serve it (the gallery now loads /images/ locally).
+  // Fresh dist; self-host the migrated images, build the folder-driven gallery
+  // (resizes gallery/ photos into dist/ and swaps them into the bundle), then
+  // write the base bundle so the render server can serve it locally.
   rmrf(DIST);
   fs.mkdirSync(DIST, { recursive: true });
   copyDir('images');
+  base = await buildGallery(base);
   fs.writeFileSync(path.join(DIST, 'index.html'), base);
 
   const server = http.createServer((req, res) => {

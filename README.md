@@ -18,7 +18,8 @@ Live domain: **appleblossomcattery.com**
 ├── prerender.js                   # Build: SEO head + pre-render every route → dist/
 ├── postbuild.js                   # SEO-head injector (exports injectSeoHead; used by prerender)
 ├── seo-head.html                  # Shared crawler-facing <head> tags (SEO source of truth)
-├── images/                        # Self-hosted photos (was static.wixstatic.com); lg/ = lightbox
+├── gallery/                       # Drop gallery photos here (see "Gallery photos" below)
+├── images/                        # og-card.jpg (social-share image); other photos self-hosted
 ├── robots.txt                     # Crawl directives + sitemap pointer (copied into dist/)
 ├── netlify.toml                   # Netlify config (build command + publish dir + functions)
 ├── .puppeteerrc.cjs               # Pins Chromium cache into the project for the build
@@ -41,6 +42,27 @@ Live domain: **appleblossomcattery.com**
 > **`index.html` is a build artifact — do not hand-edit it.** It is generated from a
 > Design Component in the design tool and re-exported whenever the look changes. Editing
 > it by hand will be overwritten on the next design update. See **Ownership** below.
+
+---
+
+## Gallery photos (add / replace / remove)
+
+The gallery is **driven entirely by the `gallery/` folder** — no design tool, no code. Each
+file in there becomes one gallery tile.
+
+- **Add a photo:** drop an image file (`.jpg`, `.png`, `.webp`, or `.gif`) into `gallery/`.
+- **Remove a photo:** delete its file from `gallery/`.
+- **Replace a photo:** swap the file (any filename works).
+- **Reorder:** photos appear in **filename order**, so prefix them `01-`, `02-`, `03-…`.
+- **Caption / alt text:** taken from the filename — `07-tabby-in-the-sun.jpg` becomes
+  "Tabby in the sun" (the `NN-` prefix is dropped, dashes become spaces). Good captions help
+  SEO and accessibility, so name files descriptively.
+
+Then commit + push (GitHub Desktop). The build automatically resizes each photo into a
+600×600 grid thumbnail and a 1600px "click to enlarge" version and rebuilds the gallery — you
+never touch image sizes or IDs. Drop in full-size photos straight off a phone or camera;
+they're optimised for you. (Animated GIFs are kept as-is to preserve animation, so keep those
+reasonably small.)
 
 ---
 

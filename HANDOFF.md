@@ -124,9 +124,13 @@ by runtime string concatenation), and copies `images/` into `dist/`. `seo-head.h
 og:image/twitter:image/JSON-LD image at the local card. **Result: zero requests to
 static.wixstatic.com** — verified on gallery load and on lightbox open.
 
-To add gallery photos later, drop the files into `images/` (and `images/lg/`); the build logs a
-warning if a referenced photo is missing. Note: one gallery item is an ~11.7 MB animated GIF
-(unchanged from the live site) — worth optimising to MP4/WebP someday, but out of scope here.
+**Gallery is now folder-driven:** the original photos live in `gallery/` and the build
+(`buildGallery()` in `prerender.js`, using `sharp`) resizes each into a 600px grid thumbnail +
+1600px lightbox version and swaps the design's hard-coded image list for one generated from the
+folder. So adding/replacing/removing/reordering gallery photos is just managing files in
+`gallery/` (order = filename order; alt text derived from the filename) — see README "Gallery
+photos". Note: one gallery item is an ~11.7 MB animated GIF (kept as-is to preserve animation) —
+worth optimising to MP4/WebP someday, but out of scope here.
 
 ### Contract reminder (website ↔ CatBooker)
 `POST {CATBOOKER_API_URL}` with `Authorization: Bearer {PEN_CHECK_SECRET}` (also sent as
