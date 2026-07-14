@@ -18,6 +18,7 @@ Live domain: **appleblossomcattery.com**
 ├── prerender.js                   # Build: SEO head + pre-render every route → dist/
 ├── postbuild.js                   # SEO-head injector (exports injectSeoHead; used by prerender)
 ├── seo-head.html                  # Shared crawler-facing <head> tags (SEO source of truth)
+├── images/                        # Self-hosted photos (was static.wixstatic.com); lg/ = lightbox
 ├── robots.txt                     # Crawl directives + sitemap pointer (copied into dist/)
 ├── netlify.toml                   # Netlify config (build command + publish dir + functions)
 ├── .puppeteerrc.cjs               # Pins Chromium cache into the project for the build
@@ -175,6 +176,12 @@ no structured data.
   authority, plus an SPA fallback so no path 404s.
 - **`robots.txt` + `sitemap.xml`** — published (were missing); the sitemap now lists one
   URL per pre-rendered route (generated each build).
+- **Images self-hosted (audit item 5, `images/` + `prerender.js`)** — the gallery photos
+  (thumbnails + lightbox) and the social-card image, previously hotlinked from
+  `static.wixstatic.com`, are downloaded into the committed `images/` folder and the build
+  rewrites every wixstatic URL to its local `/images/…` copy. The site no longer depends on
+  the old Wix media host. To add gallery photos later, drop the new files in `images/` (and
+  `images/lg/` for the enlarged versions) — the build warns if a referenced photo is missing.
 - **Content fixes** (in the design source): headline rating corrected 5★ → **4.9★**;
   "ICC accredited" → "ICC trained" (ICC does not accredit catteries); Google review
   **relative dates → absolute** so they can't silently rot; "NEW" badges removed.
@@ -187,7 +194,6 @@ no structured data.
 
 | Audit item | Why it's not in this repo | Owner |
 |---|---|---|
-| **5. Migrate images off `static.wixstatic.com`** | All photos are still hotlinked from the old Wix media host; if that subscription lapses the images vanish. Migrating needs the original image files (they can't be re-fetched from here). Upload them and they can be re-hosted, or download at build time. | **Owner / Claude Code** |
 | **9. Reconcile prices with `model.xlsx`** | The audit found the site prices disagree with the locked commercial model on the 3- and 4-cat tiers, and the £60 suite sits oddly beside the "no tiers" manifesto. The model is authoritative — must be checked before changing figures. | **Owner** |
 | **10 (part). Take a deposit** | Clause 2.6 charges for non-arrival but nothing collects it. Needs a payment mechanism + a commercial decision. | **Owner** |
 | **12. Bring the cameras to market** | Hardware + DPIA exist; whether/how to advertise (and pricing) is a business call. | **Owner** |

@@ -13,9 +13,8 @@
  */
 const BASE_URL = 'https://www.appleblossomcattery.com'
 
-// Shared social-share image (home hero). Per-route images could be added later.
-const OG_IMAGE =
-  'https://static.wixstatic.com/media/097757_78afd216873344198b33f5e8da8b734f~mv2.jpg/v1/fill/w_1200,h_630,al_c,q_85,enc_auto/097757_78afd216873344198b33f5e8da8b734f~mv2.jpg'
+// Shared social-share image, self-hosted (migrated off static.wixstatic.com).
+const OG_IMAGE = BASE_URL + '/images/og-card.jpg'
 
 const ROUTES = [
   {

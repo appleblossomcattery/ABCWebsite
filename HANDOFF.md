@@ -109,12 +109,23 @@ hydration + interactivity) across all routes.
 and never hand-edit `index.html` — pre-render runs *after* each rebundle as a build step,
 because the design tool regenerates `index.html` on every design change.
 
-### Job 2 — Migrate images off Wix (audit item 5) — ~1–2 hrs
+### Job 2 — Migrate images off Wix (audit item 5) — ✅ DONE
 
-Every photo is hotlinked from `static.wixstatic.com`; if that subscription lapses the images
-vanish. At build time (or once): download the image IDs (gallery IDs are in the DC's `images`
-array; inline photos are direct `wixstatic` URLs), store under `/images/`, and rewrite the
-`src`s to `/images/<id>.jpg`. Removes the silent dependency on the old Wix account.
+Every gallery photo used to be hotlinked from `static.wixstatic.com`; if that subscription
+lapsed the images would vanish. (The hero/inline photos were already embedded in the bundle —
+only the gallery and the social-card image used Wix.)
+
+**How it was done:** the 25 gallery photos are downloaded once into the committed `images/`
+folder — `images/<id>` (600×600 thumbnails), `images/lg/<id>` (1600×1200 lightbox), and
+`images/og-card.jpg` (1200×630 social card). `prerender.js` rewrites every wixstatic URL in the
+bundle to its local `/images/…` copy at build time (including the lightbox, whose URL is built
+by runtime string concatenation), and copies `images/` into `dist/`. `seo-head.html` points the
+og:image/twitter:image/JSON-LD image at the local card. **Result: zero requests to
+static.wixstatic.com** — verified on gallery load and on lightbox open.
+
+To add gallery photos later, drop the files into `images/` (and `images/lg/`); the build logs a
+warning if a referenced photo is missing. Note: one gallery item is an ~11.7 MB animated GIF
+(unchanged from the live site) — worth optimising to MP4/WebP someday, but out of scope here.
 
 ### Contract reminder (website ↔ CatBooker)
 `POST {CATBOOKER_API_URL}` with `Authorization: Bearer {PEN_CHECK_SECRET}` (also sent as

@@ -45,7 +45,7 @@ const path = require('path');
 const http = require('http');
 const puppeteer = require('puppeteer');
 const { injectSeoHead } = require('./postbuild');
-const { BASE_URL, OG_IMAGE, ROUTES } = require('./routes');
+const { BASE_URL, ROUTES } = require('./routes');
 
 const ROOT = __dirname;
 const DIST = path.join(ROOT, 'dist');
@@ -65,6 +65,48 @@ function writePage(routePath, html) {
 function copyIfExists(name, destName = name) {
   const src = path.join(ROOT, name);
   if (fs.existsSync(src)) fs.copyFileSync(src, path.join(DIST, destName));
+}
+function copyDir(name) {
+  const src = path.join(ROOT, name);
+  if (fs.existsSync(src)) fs.cpSync(src, path.join(DIST, name), { recursive: true });
+}
+
+// ---- image migration (audit item 5) ---------------------------------------
+// The photos hotlinked from static.wixstatic.com are self-hosted under
+// /images/ (downloaded once into the committed images/ folder). Rewrite every
+// wixstatic media URL in the bundle to its local copy at build time, so the
+// live site no longer depends on the old Wix media host. The gallery builds
+// its URLs from a `static.wixstatic.com/media/{{img.id}}/v1/fill/.../{{img.id}}`
+// template, so the {{img.id}} placeholder is preserved and resolves to
+// /images/<id> at runtime. The 1200x630 social-card image maps to a dedicated
+// /images/og-card.jpg (absolute URL, as social scrapers require).
+const OG_WIX_1200 =
+  'static.wixstatic.com/media/097757_78afd216873344198b33f5e8da8b734f~mv2.jpg/v1/fill/w_1200,h_630,al_c,q_85,enc_auto/097757_78afd216873344198b33f5e8da8b734f~mv2.jpg';
+const OG_CARD_ABS = BASE_URL + '/images/og-card.jpg';
+const LIGHTBOX_MID = '/v1/fit/w_1600,h_1200,q_88,enc_auto/';
+function migrateImages(html) {
+  // 1) Social-card 1200x630 URL → absolute local og-card (handle every prefix form).
+  for (const pre of ['https://', 'http://', '//', '']) {
+    html = html.split(pre + OG_WIX_1200).join(OG_CARD_ABS);
+  }
+  // 2) Every full wixstatic media URL (the gallery thumbnail template + any
+  //    stray) → /images/<id>. <id> is captured up to the first slash, so the
+  //    /v1/fill/.../<id> transform suffix is dropped; {{img.id}} is preserved
+  //    for the gallery to fill at runtime.
+  html = html.replace(
+    /(?:https?:)?\/\/static\.wixstatic\.com\/media\/([^/"'`\\ )]+)(?:\/v1\/[^"'`\\ )]*)?/g,
+    (_m, id) => '/images/' + id,
+  );
+  // 3) The lightbox builds its URL by concatenation, not as one literal:
+  //      'https://static.wixstatic.com/media/' + id + LIGHTBOX_MID + id
+  //    Only a bare prefix (no id) survives step 2. Point it at the large-image
+  //    dir and turn the transform middle into '#', so the concatenation yields
+  //    '/images/lg/<id>#<id>' — the browser requests '/images/lg/<id>' and the
+  //    trailing id is an ignored URL fragment.
+  html = html.split('https://static.wixstatic.com/media/').join('/images/lg/');
+  html = html.split('//static.wixstatic.com/media/').join('/images/lg/');
+  html = html.split(LIGHTBOX_MID).join('#');
+  return html;
 }
 
 // ---- <head> rewriting -----------------------------------------------------
@@ -156,6 +198,8 @@ function cleanDcRoot(rawHtml) {
   h = h.replace(/href="#\/([a-z]*)"/gi, (m, seg) => `href="/${seg ? seg + '/' : ''}"`);
   // Drop dead blob: URLs from the capture (bundle assets are per-render blobs).
   h = h.replace(/blob:[^"')\s]+/g, '');
+  // Defensive: self-host any wixstatic URL that reached the rendered markup.
+  h = migrateImages(h);
   return h;
 }
 
@@ -163,11 +207,13 @@ function cleanDcRoot(rawHtml) {
 async function main() {
   const srcIndex = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const seoHead = fs.readFileSync(path.join(ROOT, 'seo-head.html'), 'utf8');
-  const base = injectSeoHead(srcIndex, seoHead);
+  const base = migrateImages(injectSeoHead(srcIndex, seoHead));
 
-  // Fresh dist; write the base bundle so the render server can serve it.
+  // Fresh dist; self-host the migrated images, then write the base bundle so the
+  // render server can serve it (the gallery now loads /images/ locally).
   rmrf(DIST);
   fs.mkdirSync(DIST, { recursive: true });
+  copyDir('images');
   fs.writeFileSync(path.join(DIST, 'index.html'), base);
 
   const server = http.createServer((req, res) => {
@@ -238,8 +284,28 @@ async function main() {
   writeSitemap();
   writeRedirects();
   copyIfExists('robots.txt');
+  checkImages(captured);
 
   console.log(`prerender: wrote ${ROUTES.length} routes + sitemap.xml to dist/`);
+}
+
+// ---- image check ----------------------------------------------------------
+// Every /images/<id> the rendered pages reference must exist in dist/images/.
+// Warns (doesn't fail the build) if a photo was added in the design tool but
+// its file isn't in the committed images/ folder yet — download it into
+// images/ and commit, or it will 404.
+function checkImages(captured) {
+  const referenced = new Set();
+  for (const dc of Object.values(captured)) {
+    for (const m of String(dc).matchAll(/\/images\/([^"'`\\ )>]+)/g)) referenced.add(m[1]);
+  }
+  const missing = [...referenced].filter((f) => !fs.existsSync(path.join(DIST, 'images', f)));
+  if (missing.length) {
+    console.warn(`  WARNING: ${missing.length} referenced image(s) not in images/ (will 404 — download + commit them):`);
+    missing.forEach((f) => console.warn('    /images/' + f));
+  } else {
+    console.log(`  images: ${referenced.size} referenced, all present in dist/images/`);
+  }
 }
 
 // ---- sitemap + redirects --------------------------------------------------
