@@ -1,0 +1,16 @@
+{
+  "name": "apple-blossom-cattery-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Apple Blossom Cattery public website — static Design-Component SPA, pre-rendered to per-route static pages for SEO, plus a Netlify enquiry function.",
+  "scripts": {
+    "build": "node prerender.js",
+    "seo-head": "node postbuild.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "puppeteer": "^25.3.0"
+  }
+}

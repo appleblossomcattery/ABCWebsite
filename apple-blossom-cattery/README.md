@@ -13,20 +13,29 @@ Live domain: **appleblossomcattery.com**
 
 ```
 .
-├── index.html                     # The whole website (single self-contained file)
-├── seo-head.html                  # Crawler-facing <head> tags (SEO source of truth)
-├── postbuild.js                   # Injects seo-head.html into index.html at build time
-├── netlify.toml                   # Netlify config (build command + functions dir)
-├── _redirects                     # 301s from the legacy Wix URLs + SPA fallback
-├── robots.txt                     # Crawl directives + sitemap pointer
-├── sitemap.xml                    # Sitemap (root; see note re: pre-rendering)
+├── index.html                     # The whole website (single self-contained SPA bundle)
+├── routes.js                      # Route manifest: per-page title/description/canonical
+├── prerender.js                   # Build: SEO head + pre-render every route → dist/
+├── postbuild.js                   # SEO-head injector (exports injectSeoHead; used by prerender)
+├── seo-head.html                  # Shared crawler-facing <head> tags (SEO source of truth)
+├── robots.txt                     # Crawl directives + sitemap pointer (copied into dist/)
+├── netlify.toml                   # Netlify config (build command + publish dir + functions)
+├── .puppeteerrc.cjs               # Pins Chromium cache into the project for the build
+├── package.json                   # puppeteer dependency + build scripts
 ├── netlify/
 │   └── functions/
 │       └── send-enquiry.js        # Enquiry form → branded emails via Resend
+├── dist/                          # Build output (generated; git-ignored). Netlify publishes this.
+│   ├── index.html · <route>/index.html   # one pre-rendered page per route
+│   ├── sitemap.xml · _redirects          # generated fresh each build
+│   └── robots.txt
 ├── .env.example                   # Documents required environment variables
 ├── HANDOFF.md                     # GitHub+Netlify setup, update flow, Claude Code spec
 └── README.md
 ```
+
+> `sitemap.xml` and `_redirects` are **generated into `dist/`** by `prerender.js` on every
+> build — don't hand-edit them (edit `routes.js` / `prerender.js`).
 
 > **`index.html` is a build artifact — do not hand-edit it.** It is generated from a
 > Design Component in the design tool and re-exported whenever the look changes. Editing
@@ -149,18 +158,23 @@ no structured data.
 
 **Done in this repo (works on deploy):**
 
-- **`seo-head.html` + `postbuild.js`** — injects a real, crawler-visible `<head>` into the
-  served `index.html`: meta description, canonical, Open Graph + Twitter card (fixes the
-  blank social cards), `content-language`, geo tags, and two JSON-LD blocks —
-  `LocalBusiness` (address, phone, opening hours, `priceRange`, **4.9 aggregateRating**)
-  and `FAQPage`. Also sets `<html lang="en">`. Idempotent; re-runs on every build.
-  **`seo-head.html` is the source of truth for these tags** — edit it there, not in
-  `index.html`.
-- **`_redirects`** — 301s every legacy Wix URL (`/contact`, `/testimonials`,
+- **Pre-rendering (audit item 1, `prerender.js` + `routes.js`)** — the biggest SEO fix. The
+  build renders all 14 routes to their own real URLs (`/fees/`, `/about/`, …) with
+  crawler-visible content and a distinct `<title>`/description/canonical each, while every
+  page keeps the full working SPA (a `window`-scoped script re-stamps the head after
+  hydration, so Googlebot's rendered view gets distinct signals too). See HANDOFF.md §Job 1.
+- **`seo-head.html` + `postbuild.js`** — injects a real, crawler-visible shared `<head>` into
+  the bundle: meta description, canonical, Open Graph + Twitter card (fixes the blank social
+  cards), `content-language`, geo tags, and two JSON-LD blocks — `LocalBusiness` (address,
+  phone, opening hours, `priceRange`, **4.9 aggregateRating**) and `FAQPage`. Also sets
+  `<html lang="en">`. Idempotent. **`seo-head.html` is the source of truth for the shared
+  tags; `routes.js` for the per-page ones** — edit them there, not in `index.html`.
+- **`_redirects`** (generated) — 301s every legacy Wix URL (`/contact`, `/testimonials`,
   `/photo-gallery`, `/privacy-notice`, `/about-4`, `/copy-of-contact`,
-  `/copy-of-boarding-1`, …) to the matching new route, recovering indexing authority,
-  plus an SPA fallback so no path 404s.
-- **`robots.txt` + `sitemap.xml`** — published (were missing).
+  `/copy-of-boarding-1`, …) to the matching new pre-rendered route, recovering indexing
+  authority, plus an SPA fallback so no path 404s.
+- **`robots.txt` + `sitemap.xml`** — published (were missing); the sitemap now lists one
+  URL per pre-rendered route (generated each build).
 - **Content fixes** (in the design source): headline rating corrected 5★ → **4.9★**;
   "ICC accredited" → "ICC trained" (ICC does not accredit catteries); Google review
   **relative dates → absolute** so they can't silently rot; "NEW" badges removed.
@@ -173,7 +187,6 @@ no structured data.
 
 | Audit item | Why it's not in this repo | Owner |
 |---|---|---|
-| **1. Pre-render routes to real URLs** | The single biggest SEO limitation. The site is one hash-routed SPA, so there is only one indexable address; Google collapses `/#/fees` etc. to `/`. A true fix renders each route to its own static HTML file with per-page title/description at build time. The `<head>` + redirect work above captures the social-preview and local-panel value now, but distinct rankable pages need this. | **Claude Code** (build pipeline) |
 | **5. Migrate images off `static.wixstatic.com`** | All photos are still hotlinked from the old Wix media host; if that subscription lapses the images vanish. Migrating needs the original image files (they can't be re-fetched from here). Upload them and they can be re-hosted, or download at build time. | **Owner / Claude Code** |
 | **9. Reconcile prices with `model.xlsx`** | The audit found the site prices disagree with the locked commercial model on the 3- and 4-cat tiers, and the £60 suite sits oddly beside the "no tiers" manifesto. The model is authoritative — must be checked before changing figures. | **Owner** |
 | **10 (part). Take a deposit** | Clause 2.6 charges for non-arrival but nothing collects it. Needs a payment mechanism + a commercial decision. | **Owner** |

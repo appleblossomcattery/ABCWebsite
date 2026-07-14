@@ -1,14 +1,18 @@
 # Apple Blossom Cattery — Netlify configuration
-# Static site (index.html at the root) + one serverless function for the
-# enquiry form. Set RESEND_API_KEY under Site settings → Environment variables.
+# Static site + one serverless function for the enquiry form.
+# Set RESEND_API_KEY under Site settings → Environment variables.
 #
-# The build command runs postbuild.js, which injects crawler-facing <head>
-# tags (meta description, Open Graph, JSON-LD) from seo-head.html into the
-# served index.html and sets <html lang="en">. It is idempotent.
+# The build runs prerender.js, which:
+#   - injects the crawler-facing <head> (seo-head.html) into the bundle,
+#   - renders every route (routes.js) to its own real URL in dist/ with a
+#     distinct <title>/description/canonical and crawlable content,
+#   - emits sitemap.xml + _redirects and copies robots.txt.
+# Source files are never mutated, so it is safe to re-run. The design tool
+# owns index.html — re-export it and rebuild; never hand-edit it.
 
 [build]
-  publish = "."
-  command = "node postbuild.js"
+  publish = "dist"
+  command = "node prerender.js"
 
 [functions]
   directory = "netlify/functions"
