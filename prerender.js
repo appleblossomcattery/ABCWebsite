@@ -292,18 +292,32 @@ async function main() {
   // site's other stat ("69 Google reviews"), so it stays substantiable.
   base = base.split('>Google &amp; Facebook reviews<').join('>from 69 Google reviews<');
 
-  // Lift Fees and FAQ into the top navigation (they otherwise sit under the
-  // Services dropdown). Insert plain links matching the sibling nav styling
-  // just before the Testimonials link. Fail-safe: only if that anchor is found
-  // exactly once, else warn and leave the nav untouched.
+  // Lift Fees and FAQ into the top navigation and out of the Services dropdown.
+  // Injected links match the sibling styling AND the active-state underline
+  // (an sc-if on {{isFees}}/{{isFaq}}, which the bundle already computes), so
+  // they highlight in plum on their own page like every other top-level link.
+  // Fail-safe on the insertion anchor; the dropdown removal is a no-op if the
+  // items aren't found.
   const navAnchor = '<a href=\\"#/testimonials\\" style=\\"position:relative;font-weight:600;font-size:15px;color:#46474A;padding:4px 0\\"';
   const navSty = 'style=\\"position:relative;font-weight:600;font-size:15px;color:#46474A;padding:4px 0\\" style-hover=\\"color:#9B4880\\"';
+  const uline = (v) => `<sc-if value=\\"{{${v}}}\\"><span style=\\"position:absolute;left:0;right:0;bottom:-5px;height:2px;background:#9B4880;border-radius:2px\\"></span></sc-if>`;
   if (base.split(navAnchor).length === 2) {
-    base = base.replace(navAnchor, `<a href=\\"#/fees\\" ${navSty}>Fees</a><a href=\\"#/faq\\" ${navSty}>FAQ</a>${navAnchor}`);
-    console.log('  nav: added Fees + FAQ as top-level links');
+    base = base.replace(navAnchor, `<a href=\\"#/fees\\" ${navSty}>Fees${uline('isFees')}</a><a href=\\"#/faq\\" ${navSty}>FAQ${uline('isFaq')}</a>${navAnchor}`);
+    console.log('  nav: added Fees + FAQ as top-level links (with active underline)');
   } else {
     console.warn('  nav: Testimonials anchor not unique — left nav unchanged (design bundle may have changed)');
   }
+  // Remove Fees + FAQ from the Services dropdown now that they are top-level.
+  const dropItem = (href, label) => `<a href=\\"${href}\\" style=\\"display:block;padding:11px 14px;border-radius:11px;font-weight:600;font-size:14.5px;color:#46474A\\" style-hover=\\"background:#FBEEF4;color:#9B4880\\">${label}<\\u002Fa>`;
+  for (const [href, label] of [['#/fees', 'Fees'], ['#/faq', 'FAQ']]) {
+    const item = dropItem(href, label);
+    if (base.includes(item)) base = base.split(item).join('');
+    else console.warn(`  nav: Services dropdown item "${label}" not found (left as-is)`);
+  }
+  // Drop fees/faq from the "Services active" set too, so the Services button no
+  // longer underlines on those pages (they highlight themselves now).
+  base = base.split("['boarding','pickup','fees','hours','vaccinations','why','faq']")
+    .join("['boarding','pickup','hours','vaccinations','why']");
 
   // Fresh dist; self-host the migrated images, build the folder-driven gallery
   // (resizes gallery/ photos into dist/ and swaps them into the bundle), then
