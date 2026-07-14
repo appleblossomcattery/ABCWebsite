@@ -1,0 +1,83 @@
+<!-- Apple Blossom Cattery — crawler-facing <head> tags.
+     SINGLE SOURCE OF TRUTH for production SEO/social/structured data.
+     postbuild.js injects this into index.html's real <head> on every Netlify
+     deploy (the DC bundler otherwise keeps head tags inside a JS string that
+     crawlers and social scrapers cannot read). Do NOT include <title> here —
+     the bundler already emits it into the real <head>. -->
+<meta name="description" content="Award-winning, fully climate-controlled cat boarding in Talygarn, Pontyclun (Vale of Glamorgan). Family-run since 2019, rated 4.9★ on Google and recommended by local vets. Your cat, loved like our own.">
+<link rel="canonical" href="https://www.appleblossomcattery.com/">
+<meta http-equiv="content-language" content="en-GB">
+<meta name="theme-color" content="#9B4880">
+<meta name="author" content="Apple Blossom Cattery">
+<meta name="geo.region" content="GB-VGL">
+<meta name="geo.placename" content="Talygarn, Pontyclun">
+<meta name="geo.position" content="51.505458;-3.409968">
+<meta name="ICBM" content="51.505458, -3.409968">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Apple Blossom Cattery">
+<meta property="og:title" content="Apple Blossom Cattery — Luxury Cat Boarding in Talygarn, Pontyclun">
+<meta property="og:description" content="Award-winning, fully climate-controlled cat boarding in the Vale of Glamorgan. Family-run since 2019, rated 4.9★ on Google. Your cat, loved like our own.">
+<meta property="og:url" content="https://www.appleblossomcattery.com/">
+<meta property="og:locale" content="en_GB">
+<meta property="og:image" content="https://static.wixstatic.com/media/097757_78afd216873344198b33f5e8da8b734f~mv2.jpg/v1/fill/w_1200,h_630,al_c,q_85,enc_auto/097757_78afd216873344198b33f5e8da8b734f~mv2.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A cat relaxing in the care of Apple Blossom Cattery">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Apple Blossom Cattery — Luxury Cat Boarding, Pontyclun">
+<meta name="twitter:description" content="Award-winning, climate-controlled cat boarding in the Vale of Glamorgan. Rated 4.9★ on Google. Loved like our own.">
+<meta name="twitter:image" content="https://static.wixstatic.com/media/097757_78afd216873344198b33f5e8da8b734f~mv2.jpg/v1/fill/w_1200,h_630,al_c,q_85,enc_auto/097757_78afd216873344198b33f5e8da8b734f~mv2.jpg">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": "https://www.appleblossomcattery.com/#business",
+  "name": "Apple Blossom Cattery",
+  "description": "Award-winning, fully climate-controlled cat boarding in Talygarn, Pontyclun, Vale of Glamorgan. Family-run since 2019.",
+  "url": "https://www.appleblossomcattery.com/",
+  "telephone": "+447855475851",
+  "email": "laura@appleblossomcattery.com",
+  "image": "https://static.wixstatic.com/media/097757_78afd216873344198b33f5e8da8b734f~mv2.jpg/v1/fill/w_1200,h_630,al_c,q_85,enc_auto/097757_78afd216873344198b33f5e8da8b734f~mv2.jpg",
+  "priceRange": "££",
+  "currenciesAccepted": "GBP",
+  "paymentAccepted": "Cash",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Cowbridge Road, Talygarn",
+    "addressLocality": "Pontyclun",
+    "addressRegion": "Vale of Glamorgan",
+    "postalCode": "CF72 9JU",
+    "addressCountry": "GB"
+  },
+  "geo": { "@type": "GeoCoordinates", "latitude": 51.505458, "longitude": -3.409968 },
+  "hasMap": "https://www.google.com/maps/dir/?api=1&destination=51.505458,-3.409968",
+  "openingHoursSpecification": [{
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+    "opens": "10:00", "closes": "16:00", "description": "By appointment"
+  }],
+  "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "reviewCount": "69", "bestRating": "5" },
+  "areaServed": ["Pontyclun","Talygarn","Cardiff","Vale of Glamorgan","Rhondda Cynon Taf"],
+  "sameAs": [
+    "https://www.facebook.com/appleblossomcattery",
+    "https://www.instagram.com/ablossomcattery/",
+    "https://twitter.com/ablossomcattery"
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What vaccinations does my cat need to stay?", "acceptedAnswer": { "@type": "Answer", "text": "Cats must be vaccinated against cat flu and feline enteritis, given at least 14 days before boarding. Please bring an up-to-date vaccination certificate on arrival." } },
+    { "@type": "Question", "name": "What should I bring?", "acceptedAnswer": { "@type": "Answer", "text": "Your cat's vaccination certificate, enough of their usual food for the stay, and any medication in its original labelled packaging. You are warmly welcome to bring familiar bedding, toys or a blanket from home." } },
+    { "@type": "Question", "name": "What food do you feed?", "acceptedAnswer": { "@type": "Answer", "text": "We feed quality brands including IAMS, Harringtons, Scrumbles and HiLife, and we are happy to keep your cat on their own food to avoid any tummy upsets." } },
+    { "@type": "Question", "name": "Can cats from the same family share a pen?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Cats from the same household can share a pen, and our interconnected two-pen suites suit larger families who want extra room." } },
+    { "@type": "Question", "name": "Can you give medication?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. We can administer most medication, including injections such as insulin, at 2 to 4 pounds per cat per day. Please provide it in the original veterinary packaging." } },
+    { "@type": "Question", "name": "What are your opening and drop-off times?", "acceptedAnswer": { "@type": "Answer", "text": "By appointment, normally 10am to 4pm, seven days a week. We prefer afternoon drop-offs and morning collections so we can settle and clean between guests." } },
+    { "@type": "Question", "name": "Is there a minimum stay?", "acceptedAnswer": { "@type": "Answer", "text": "Yes: 3 nights off-peak, 4 nights from 1 June to 30 September, and 5 nights over Christmas." } },
+    { "@type": "Question", "name": "Is the cattery climate controlled?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Following our 2026 upgrade the whole cattery is climate controlled year-round, kept at a steady, comfortable temperature in summer and winter." } }
+  ]
+}
+</script>

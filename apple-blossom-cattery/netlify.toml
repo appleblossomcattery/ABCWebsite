@@ -1,0 +1,15 @@
+# Apple Blossom Cattery — Netlify configuration
+# Static site (index.html at the root) + one serverless function for the
+# enquiry form. Set RESEND_API_KEY under Site settings → Environment variables.
+#
+# The build command runs postbuild.js, which injects crawler-facing <head>
+# tags (meta description, Open Graph, JSON-LD) from seo-head.html into the
+# served index.html and sets <html lang="en">. It is idempotent.
+
+[build]
+  publish = "."
+  command = "node postbuild.js"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
