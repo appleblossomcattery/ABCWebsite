@@ -265,6 +265,10 @@ async function main() {
   const srcIndex = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const seoHead = fs.readFileSync(path.join(ROOT, 'seo-head.html'), 'utf8');
   let base = migrateImages(injectSeoHead(srcIndex, seoHead));
+  // Normalise the served host to the apex everywhere (the design bundle
+  // hard-codes www in its own head/JSON-LD; the server 301s www → apex, so
+  // canonical/og/schema must all point at the apex, including post-hydration).
+  base = base.split('www.appleblossomcattery.com').join('appleblossomcattery.com');
 
   // Fresh dist; self-host the migrated images, build the folder-driven gallery
   // (resizes gallery/ photos into dist/ and swaps them into the bundle), then

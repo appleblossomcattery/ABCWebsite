@@ -11,7 +11,9 @@
  * route changes), and sitemap.xml. `hash` is the in-app route; `path` is the
  * real URL the route is written to (always trailing-slash, home = '/').
  */
-const BASE_URL = 'https://www.appleblossomcattery.com'
+// Apex host — this is what the server serves (www 301-redirects to it), so
+// every canonical / og:url / sitemap entry must point here, not at www.
+const BASE_URL = 'https://appleblossomcattery.com'
 
 // Shared social-share image, self-hosted (migrated off static.wixstatic.com).
 const OG_IMAGE = BASE_URL + '/images/og-card.jpg'

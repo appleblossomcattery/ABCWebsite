@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.appleblossomcattery.com/sitemap.xml
+Sitemap: https://appleblossomcattery.com/sitemap.xml
