@@ -277,6 +277,13 @@ async function main() {
   // figures. Only these two exact rates are touched — see prerender README note.
   for (const [from, to] of [['£24', '£25'], ['£26', '£27']]) base = base.split(from).join(to);
 
+  // Publish the animal boarding licence number where the site already mentions
+  // the Vale of Glamorgan inspection (audit: the number reassures and is
+  // expected in the sector). Held by Rhys & Laura Johns as individuals — there
+  // is no company number, and their home address is deliberately not published.
+  base = base.split('Vale of Glamorgan Animal Welfare team, and fully insured')
+    .join('Vale of Glamorgan Animal Welfare team (Animal Boarding Licence no. BOE028), and fully insured');
+
   // Fresh dist; self-host the migrated images, build the folder-driven gallery
   // (resizes gallery/ photos into dist/ and swaps them into the bundle), then
   // write the base bundle so the render server can serve it locally.
