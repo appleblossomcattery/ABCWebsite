@@ -287,6 +287,24 @@ async function main() {
   base = base.split('Vale of Glamorgan Animal Welfare team, and fully insured')
     .join('Vale of Glamorgan Animal Welfare team (Animal Boarding Licence no. BOE028), and fully insured');
 
+  // Surface the review count in the headline rating stat (audit/eval: show
+  // "4.9★ from N reviews"). 69 matches the aggregateRating schema and the
+  // site's other stat ("69 Google reviews"), so it stays substantiable.
+  base = base.split('>Google &amp; Facebook reviews<').join('>from 69 Google reviews<');
+
+  // Lift Fees and FAQ into the top navigation (they otherwise sit under the
+  // Services dropdown). Insert plain links matching the sibling nav styling
+  // just before the Testimonials link. Fail-safe: only if that anchor is found
+  // exactly once, else warn and leave the nav untouched.
+  const navAnchor = '<a href=\\"#/testimonials\\" style=\\"position:relative;font-weight:600;font-size:15px;color:#46474A;padding:4px 0\\"';
+  const navSty = 'style=\\"position:relative;font-weight:600;font-size:15px;color:#46474A;padding:4px 0\\" style-hover=\\"color:#9B4880\\"';
+  if (base.split(navAnchor).length === 2) {
+    base = base.replace(navAnchor, `<a href=\\"#/fees\\" ${navSty}>Fees</a><a href=\\"#/faq\\" ${navSty}>FAQ</a>${navAnchor}`);
+    console.log('  nav: added Fees + FAQ as top-level links');
+  } else {
+    console.warn('  nav: Testimonials anchor not unique — left nav unchanged (design bundle may have changed)');
+  }
+
   // Fresh dist; self-host the migrated images, build the folder-driven gallery
   // (resizes gallery/ photos into dist/ and swaps them into the bundle), then
   // write the base bundle so the render server can serve it locally.
