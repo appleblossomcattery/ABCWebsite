@@ -232,11 +232,39 @@ function persistScript() {
 })();</script>`;
 }
 
+// ---- runtime floating WhatsApp button -------------------------------------
+// A sitewide "Chat on WhatsApp" button. Like the SEO-persist script it must
+// survive the bundle's document swap, so it re-appends itself after hydration
+// and on every route change. It's a direct child of <body> (position:fixed), so
+// the app's per-route re-render of #dc-root leaves it in place. Plum, not
+// WhatsApp green, to stay on brand.
+function floatingContactScript() {
+  const glyph = 'M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 18.15h-.01c-1.53 0-3.03-.41-4.34-1.18l-.31-.18-3.23.85.86-3.15-.2-.32a8.19 8.19 0 0 1-1.26-4.35c0-4.54 3.7-8.23 8.24-8.23 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.82c0 4.54-3.7 8.32-8.23 8.32zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43-.14-.01-.31-.01-.48-.01-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.25 3.74.59.26 1.06.41 1.42.52.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z';
+  return `<script>(function(){
+  var HREF='https://wa.me/447855475851';
+  function ensure(){try{
+    if(!document.body||document.getElementById('abc-wa'))return;
+    var a=document.createElement('a');
+    a.id='abc-wa';a.href=HREF;a.target='_blank';a.rel='noopener';
+    a.setAttribute('aria-label','Chat with us on WhatsApp');
+    a.style.cssText='position:fixed;right:18px;bottom:18px;z-index:9998;width:56px;height:56px;border-radius:50%;background:#9B4880;box-shadow:0 8px 22px rgba(124,58,102,.32);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent';
+    a.innerHTML='<svg width="30" height="30" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="${glyph}"/></svg>';
+    document.body.appendChild(a);
+  }catch(e){}}
+  window.addEventListener('hashchange',ensure,true);
+  window.addEventListener('load',ensure,true);
+  try{new MutationObserver(ensure).observe(document,{childList:true});}catch(e){}
+  var n=0,iv=setInterval(function(){ensure();if(++n>30)clearInterval(iv);},300);
+  ensure();
+})();</script>`;
+}
+
 // ---- per-route page assembly ----------------------------------------------
 function assemble(base, r, dcRootHtml) {
   let html = applyRouteHead(base, r);
-  // Persist script goes first inside <head> so it registers before the bundle.
-  html = html.replace(/<head[^>]*>/i, (m) => m + '\n' + persistScript());
+  // Persist + floating-WhatsApp scripts go first inside <head> so they register
+  // (on window) before the bundle swaps the document.
+  html = html.replace(/<head[^>]*>/i, (m) => m + '\n' + persistScript() + '\n' + floatingContactScript());
   // Remove the splash thumbnail so no-JS crawlers/users see real content, not a logo.
   html = html.replace(/<div id="__bundler_thumbnail">[\s\S]*?<\/div>\s*<\/div>/i, '');
   // Inject the pre-rendered content + (for non-home) a hash bootstrap, right
