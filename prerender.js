@@ -319,6 +319,26 @@ async function main() {
   base = base.split("['boarding','pickup','fees','hours','vaccinations','why','faq']")
     .join("['boarding','pickup','hours','vaccinations','why']");
 
+  // Testimonials page: the "read every review on our live listings" section only
+  // linked Facebook. Add a matching Google reviews card (star icon, same plum
+  // style) before it, linking to the Google business listing. Fail-safe on the
+  // Facebook card anchor.
+  const fbCardAnchor = '<a href=\\"https://www.facebook.com/appleblossomcattery/reviews\\"';
+  const googleCard =
+    '<a href=\\"https://g.page/r/CfJm8Hnbu3CYEBE\\" target=\\"_blank\\" rel=\\"noopener\\" ' +
+    'style=\\"display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #ECE0E7;border-radius:18px;padding:20px 22px\\" ' +
+    'style-hover=\\"border-color:#9B4880;transform:translateY(-3px)\\">' +
+    '<span style=\\"flex:none;width:44px;height:44px;border-radius:12px;background:#FBEEF4;color:#9B4880;display:inline-flex;align-items:center;justify-content:center\\">' +
+    '<svg width=\\"22\\" height=\\"22\\" sc-camel-view-box=\\"0 0 24 24\\" fill=\\"currentColor\\"><path d=\\"M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z\\"></path></svg></span>' +
+    '<div><div style=\\"font-family:\'Quicksand\',sans-serif;font-weight:700;font-size:15px;color:#46474A\\">Google</div>' +
+    '<div style=\\"font-size:13px;color:#7C7D81\\">Read our reviews</div></div></a>\\n            ';
+  if (base.split(fbCardAnchor).length === 2) {
+    base = base.replace(fbCardAnchor, googleCard + fbCardAnchor);
+    console.log('  reviews: added Google reviews card on Testimonials');
+  } else {
+    console.warn('  reviews: Facebook card anchor not unique — skipped Google card');
+  }
+
   // Fresh dist; self-host the migrated images, build the folder-driven gallery
   // (resizes gallery/ photos into dist/ and swaps them into the bundle), then
   // write the base bundle so the render server can serve it locally.
