@@ -320,8 +320,10 @@ async function main() {
 
   // Spell out the updates owners get — photos, videos and a FaceTime call on
   // request (their most-praised habit in reviews; the site under-mentioned it).
-  base = base.split('and photos during their stay, so you know')
-    .join('photos and videos during their stay, and a FaceTime call with your cat on request, so you know');
+  // Present-continuous ending: these are live updates DURING the trip, unlike
+  // the original past-tense line which only fitted the departure report.
+  base = base.split('and photos during their stay, so you know how your cat got on while you were away.')
+    .join('photos and videos during their stay, and a FaceTime call with your cat on request, so you know how your cat is getting on during your trip.');
 
   // Surface the review count in the headline rating stat (audit/eval: show
   // "4.9★ from N reviews"). 69 matches the aggregateRating schema and the
