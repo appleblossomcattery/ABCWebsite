@@ -315,6 +315,11 @@ async function main() {
   base = base.split('Vale of Glamorgan Animal Welfare team, and fully insured')
     .join('Vale of Glamorgan Animal Welfare team (Animal Boarding Licence no. BOE028), and fully insured');
 
+  // Spell out the updates owners get — photos, videos and a FaceTime call on
+  // request (their most-praised habit in reviews; the site under-mentioned it).
+  base = base.split('and photos during their stay, so you know')
+    .join('photos and videos during their stay, and a FaceTime call with your cat on request, so you know');
+
   // Surface the review count in the headline rating stat (audit/eval: show
   // "4.9★ from N reviews"). 69 matches the aggregateRating schema and the
   // site's other stat ("69 Google reviews"), so it stays substantiable.
