@@ -265,8 +265,11 @@ function assemble(base, r, dcRootHtml) {
   // Persist + floating-WhatsApp scripts go first inside <head> so they register
   // (on window) before the bundle swaps the document.
   html = html.replace(/<head[^>]*>/i, (m) => m + '\n' + persistScript() + '\n' + floatingContactScript());
-  // Remove the splash thumbnail so no-JS crawlers/users see real content, not a logo.
-  html = html.replace(/<div id="__bundler_thumbnail">[\s\S]*?<\/div>\s*<\/div>/i, '');
+  // Remove the splash thumbnail so no-JS crawlers/users see real content, not a
+  // logo. The thumbnail div holds only an <svg> (no nested div), so match up to
+  // its SINGLE closing </div>. (Matching "</div></div>" over-ran to a far-away
+  // pair and devoured the 2 MB asset bundle — which broke every image.)
+  html = html.replace(/<div id="__bundler_thumbnail">[\s\S]*?<\/div>/i, '');
   // Inject the pre-rendered content + (for non-home) a hash bootstrap, right
   // after <body>. Both are wiped on hydration; they exist for the first paint
   // and for crawlers that don't run the bundle.
