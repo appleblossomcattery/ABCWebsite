@@ -375,6 +375,31 @@ async function main() {
     console.warn('  reviews: Facebook card anchor not unique — skipped Google card');
   }
 
+  // Homepage feature strip: add a "Photos, videos & FaceTime" card (the
+  // most-praised habit in reviews deserves front-page billing). Inserted before
+  // the closing "Loved like our own" card, styled identically to its siblings
+  // (video-camera icon, same tile/heading/body styles). The strip's auto-fit
+  // minimum drops 230px → 190px so five cards still sit across on desktop.
+  const lovedH4 = '>Loved like our own<';
+  const cardOpen = '<div style=\\"background:#fff;border:1px solid #ECE0E7;border-radius:18px;padding:24px 22px\\">';
+  const updatesCard =
+    cardOpen +
+    '<span style=\\"width:46px;height:46px;border-radius:13px;background:#FBEEF4;color:#9B4880;display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px\\">' +
+    '<svg width=\\"24\\" height=\\"24\\" sc-camel-view-box=\\"0 0 24 24\\" fill=\\"none\\" stroke=\\"currentColor\\" stroke-width=\\"1.7\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\"><polygon points=\\"23 7 16 12 23 17 23 7\\"></polygon><rect x=\\"1\\" y=\\"5\\" width=\\"15\\" height=\\"14\\" rx=\\"2\\" ry=\\"2\\"></rect></svg></span>' +
+    '<h4 style=\\"font-weight:800;font-size:16px;color:#46474A;margin:0 0 6px\\">Photos, videos &amp; FaceTime</h4>' +
+    '<p style=\\"margin:0;font-size:14.5px;line-height:1.6;color:#7C7D81\\">Photo and video updates during their stay — and a FaceTime call with your cat on request.</p>' +
+    '</div>\\n          ';
+  const h4Idx = base.indexOf(lovedH4);
+  const insertAt = h4Idx > -1 ? base.lastIndexOf(cardOpen, h4Idx) : -1;
+  if (insertAt > -1) {
+    base = base.slice(0, insertAt) + updatesCard + base.slice(insertAt);
+    console.log('  home: added "Photos, videos & FaceTime" feature card');
+    base = base.split('minmax(230px,1fr));gap:16px\\" class=\\"abc-4col\\"')
+      .join('minmax(190px,1fr));gap:16px\\" class=\\"abc-4col\\"');
+  } else {
+    console.warn('  home: feature-strip anchor not found — skipped updates card');
+  }
+
   // Fresh dist; self-host the migrated images, build the folder-driven gallery
   // (resizes gallery/ photos into dist/ and swaps them into the bundle), then
   // write the base bundle so the render server can serve it locally.
