@@ -93,10 +93,11 @@ async function penCheck(input) {
   const url = process.env.CATBOOKER_API_URL;
   const secret = process.env.PEN_CHECK_SECRET || '';
   if (!url) {
-    // Mock until CATBOOKER_API_URL is set: available for up to 4 cats.
-    const cats = parseInt(input.cats, 10) || 1;
-    const possible = cats <= 4;
-    return { possible: possible, options: possible ? [{ pen: 'Meadow 2', cats: cats }] : [], moves: [], mock: true };
+    // Not configured: report UNKNOWN, never a guess. This used to answer "available
+    // for up to 4 cats, pen Meadow 2" — a pen that doesn't exist — so a lost env var
+    // silently told staff a full house had space. Availability only ever comes from
+    // CatBooker's Pen Checker; if we can't reach it, we say so.
+    return { possible: null, error: true, unconfigured: true };
   }
   try {
     const res = await fetch(url, {
@@ -120,13 +121,16 @@ function penCheckBlock(r) {
   var head, color, bg, border, detail;
   if (r.error || r.possible == null) {
     head = 'Pen Checker \u2014 could not run'; color = '#6E6470'; bg = '#F4EFF2'; border = '#E4D5DE';
-    detail = 'The automatic availability check did not complete \u2014 please check the diary.';
+    detail = r.unconfigured
+      ? 'The availability check is not configured on this deploy (CATBOOKER_API_URL) \u2014 please check the diary.'
+      : 'The automatic availability check did not complete \u2014 please check the diary.';
   } else if (r.possible) {
-    head = 'Pen Checker \u2014 AVAILABLE' + (r.mock ? ' (demo data)' : ''); color = '#2F6B45'; bg = '#EAF6EE'; border = '#BFE3CC';
-    detail = (pensTxt ? 'Fits in: ' + pensTxt + '. ' : '') + (movesTxt ? 'Moves needed: ' + movesTxt + '.' : 'No moves needed.');
+    head = 'Pen Checker \u2014 AVAILABLE'; color = '#2F6B45'; bg = '#EAF6EE'; border = '#BFE3CC';
+    detail = (pensTxt ? 'Fits in: ' + pensTxt + '. ' : '') +
+      (movesTxt ? 'Only with these pen moves \u2014 they must be made before the stay: ' + movesTxt + '.' : 'No moves needed.');
   } else {
-    head = 'Pen Checker \u2014 NOT currently available' + (r.mock ? ' (demo data)' : ''); color = '#8A6224'; bg = '#FBF1E7'; border = '#F0D8BE';
-    detail = movesTxt ? 'Closest fit would need moves: ' + movesTxt + '.' : 'No combination of pens fits these dates.';
+    head = 'Pen Checker \u2014 NOT currently available'; color = '#8A6224'; bg = '#FBF1E7'; border = '#F0D8BE';
+    detail = 'No combination of pens fits these dates, even after re-shuffling.';
   }
   return '<div style="margin-top:20px;background:' + bg + ';border:1px solid ' + border + ';border-radius:14px;padding:14px 16px">' +
     '<div style="font-family:' + HEAD_FONT + ';font-weight:700;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:' + color + ';margin-bottom:6px">' + head + '</div>' +
