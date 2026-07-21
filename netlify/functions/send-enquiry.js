@@ -180,7 +180,15 @@ exports.handler = async (event) => {
   // Run the Pen Checker (via CatBooker) for the internal email + availability reply.
   let pen = null;
   if (f.start && f.end) {
-    try { pen = await penCheck({ start: f.start, end: f.end, cats: cats }); } catch (_) { pen = { error: true }; }
+    // Pass the enquirer through so CatBooker RECORDS the enquiry, not just answers
+    // it. Every enquiry used to live in an inbox and be re-keyed by hand, so there
+    // was no conversion rate and no record of demand turned away at peak.
+    try {
+      pen = await penCheck({
+        start: f.start, end: f.end, cats: cats,
+        enquirer: { name: name, email: email, phone: f.phone || null, message: f.message || f.notes || null }
+      });
+    } catch (_) { pen = { error: true }; }
   }
 
   // 1) Internal enquiry to the cattery
