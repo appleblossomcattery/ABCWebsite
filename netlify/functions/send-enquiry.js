@@ -21,6 +21,20 @@ const CC_OWNER = process.env.MAIL_CC || 'bookings@appleblossomcattery.com';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
 
+// Person-name casing: every word becomes Capital + lowercase ("DEBORAH" →
+// "Deborah", "rhys" → "Rhys"), across hyphens and apostrophes, with one
+// carve-out — a typed Mc surname keeps its inner capital ("McKenzie").
+// Mirrors nameCase() in CatBooker's src/lib/text.ts — keep in lockstep, so the
+// name recorded against the enquiry there matches what CatBooker itself would
+// derive.
+const nameCase = (s) => String(s == null ? '' : s)
+  .replace(/[A-Za-zÀ-ÖØ-öø-ÿ]+/g, (w) => {
+    if (/^Mc[A-Z]/.test(w)) return 'Mc' + w[2].toUpperCase() + w.slice(3).toLowerCase();
+    return w[0].toUpperCase() + w.slice(1).toLowerCase();
+  })
+  .replace(/\s+/g, ' ')
+  .trim();
+
 // Five-petal blossom mark (Apple Mail / iOS render it; Gmail drops <svg>
 // cleanly with no broken-image icon, so it degrades safely).
 const blossom = (size) =>
@@ -162,8 +176,19 @@ exports.handler = async (event) => {
   if (f.company) return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
 
   const email = String(f.email || '').trim();
-  const name = String(f.name || ((f.firstName || '') + ' ' + (f.lastName || ''))).trim();
-  const first = name.split(/\s+/)[0] || name;
+  // The form asks first name + surname separately (the same pattern as
+  // CatBooker: the display name is derived, never typed) and both are strictly
+  // cased here, so a typed "rhys johns" is recorded — and greeted — as "Rhys
+  // Johns". Visitors on a cached older bundle still send a single `name`;
+  // split it so nothing bounces.
+  let first = nameCase(f.firstName);
+  let last = nameCase(f.lastName);
+  if (!first && !last) {
+    const words = nameCase(f.name).split(/\s+/).filter(Boolean);
+    first = words[0] || '';
+    last = words.slice(1).join(' ');
+  }
+  const name = (first + ' ' + last).trim();
   if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return { statusCode: 422, headers, body: JSON.stringify({ error: 'Missing or invalid fields' }) };
   }
@@ -186,7 +211,10 @@ exports.handler = async (event) => {
     try {
       pen = await penCheck({
         start: f.start, end: f.end, cats: cats,
-        enquirer: { name: name, email: email, phone: f.phone || null, message: f.message || f.notes || null }
+        enquirer: {
+          name: name, firstName: first || null, lastName: last || null,
+          email: email, phone: f.phone || null, message: f.message || f.notes || null
+        }
       });
     } catch (_) { pen = { error: true }; }
   }
