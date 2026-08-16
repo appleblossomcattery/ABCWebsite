@@ -19,9 +19,11 @@ Live domain: **appleblossomcattery.com**
 ├── postbuild.js                   # SEO-head injector (exports injectSeoHead; used by prerender)
 ├── seo-head.html                  # Shared crawler-facing <head> tags (SEO source of truth)
 ├── gallery/                       # Drop gallery photos here (see "Gallery photos" below)
-├── documents/                     # Published PDFs (policies). To issue a new edition, replace
-│                                  #   apple-blossom-policies.pdf KEEPING THE SAME FILENAME —
-│                                  #   the site links to /documents/apple-blossom-policies.pdf
+├── documents/                     # Policies: the .docx is the MASTER (feeds the generated,
+│                                  #   indexable /policies/ page at build time; never published
+│                                  #   itself); the .pdf is the designed download offered on that
+│                                  #   page. To issue a new edition replace BOTH files KEEPING
+│                                  #   THE SAME FILENAMES (apple-blossom-policies.docx / .pdf)
 ├── images/                        # og-card.jpg (social-share image); other photos self-hosted
 ├── robots.txt                     # Crawl directives + sitemap pointer (copied into dist/)
 ├── netlify.toml                   # Netlify config (build command + publish dir + functions)
@@ -64,8 +66,9 @@ file in there becomes one gallery tile.
 Then commit + push (GitHub Desktop). The build automatically resizes each photo into a
 600×600 grid thumbnail and a 1600px "click to enlarge" version and rebuilds the gallery — you
 never touch image sizes or IDs. Drop in full-size photos straight off a phone or camera;
-they're optimised for you. (Animated GIFs are kept as-is to preserve animation, so keep those
-reasonably small.)
+they're optimised for you. Animated GIFs are converted too: the grid shows a static frame and
+the click-to-enlarge view keeps the animation (as animated WebP), so even a huge GIF costs the
+page almost nothing.
 
 ---
 
