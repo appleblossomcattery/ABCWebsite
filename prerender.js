@@ -353,6 +353,24 @@ async function main() {
   // figures. Only these two exact rates are touched — see prerender README note.
   for (const [from, to] of [['£24', '£25'], ['£26', '£27']]) base = base.split(from).join(to);
 
+  // Pen dimensions + disease-control architecture (source: the licensing
+  // schedule "ABC Pen Dimensions" for BOE028 — family 6.37m², double 4.58m²,
+  // walk-in singles 2.60–3.52m²; plus full-length sneeze barriers in every pen
+  // and the metre-wide two-door safety corridor). Audit benchmark: every
+  // 9-10-scoring cattery publishes dimensions and disease-control design.
+  const penCopy = [
+    ['each with a warm sleeping area and room to stretch, climb and watch the world go by.',
+     'each with a warm sleeping area and room to stretch, climb and watch the world go by. Each double gives its guests 4.58 m² across the sleeping cabin, exercise run and shelving, and our cosier walk-in singles range from 2.6 to 3.5 m².'],
+    ['or a mother cat and her kittens — so families can stay together.',
+     'or a mother cat and her kittens — so families can stay together. At 6.37 m² apiece, they are the largest accommodation in the house.'],
+    ['the national market leader in cattery building.<\\u002Fp>\\n          <\\u002Fdiv>',
+     'the national market leader in cattery building.<\\u002Fp>\\n            <p style=\\"font-size:16.5px;line-height:1.75;color:#56565A;margin:0\\">Every pen is separated from its neighbours by full-length sneeze barriers, and a metre-wide safety corridor runs the length of the cattery — so there are always two closed doors between your cat and the open air.<\\u002Fp>\\n          <\\u002Fdiv>'],
+  ];
+  for (const [from, to] of penCopy) {
+    if (base.includes(from)) base = base.split(from).join(to);
+    else console.warn('  pens: anchor missing, copy not injected: ' + from.slice(0, 50) + '…');
+  }
+
   // Publish the animal boarding licence number where the site already mentions
   // the Vale of Glamorgan inspection (audit: the number reassures and is
   // expected in the sector). Held by Rhys & Laura Johns as individuals — there
