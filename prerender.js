@@ -360,9 +360,9 @@ async function main() {
   // 9-10-scoring cattery publishes dimensions and disease-control design.
   const penCopy = [
     ['each with a warm sleeping area and room to stretch, climb and watch the world go by.',
-     'each with a warm sleeping area and room to stretch, climb and watch the world go by. Each double gives its guests 4.58 m² across the sleeping cabin, exercise run and shelving, and our cosier walk-in singles range from 2.6 to 3.5 m².'],
+     'each with a warm sleeping area and room to stretch, climb and watch the world go by. Each double gives its guests 4.58 m² across the sleeping cabin, exercise run and shelving, and our cosier walk-in singles range from 2.6 to 3.5 m². Three pairs of doubles also link through an internal access hatch to form 9.16 m² two-pen suites — the roomiest accommodation we offer.'],
     ['or a mother cat and her kittens — so families can stay together.',
-     'or a mother cat and her kittens — so families can stay together. At 6.37 m² apiece, they are the largest accommodation in the house.'],
+     'or a mother cat and her kittens — so families can stay together. At 6.37 m² apiece, they are the largest individual pens in the house.'],
     ['the national market leader in cattery building.<\\u002Fp>\\n          <\\u002Fdiv>',
      'the national market leader in cattery building.<\\u002Fp>\\n            <p style=\\"font-size:16.5px;line-height:1.75;color:#56565A;margin:0\\">Every pen is separated from its neighbours by full-length sneeze barriers, and a metre-wide safety corridor runs the length of the cattery — so there are always two closed doors between your cat and the open air.<\\u002Fp>\\n          <\\u002Fdiv>'],
     // Storm guards + outlook (Rhys, Aug 2026): drop-away external guards keep
