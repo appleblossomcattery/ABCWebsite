@@ -636,7 +636,33 @@ function write404() {
 async function buildPoliciesPage() {
   const docx = path.join(ROOT, 'documents', 'apple-blossom-policies.docx');
   if (!fs.existsSync(docx)) { console.warn('  policies: docx master missing — /policies/ page NOT generated'); return; }
-  const { value: body } = await mammoth.convertToHtml({ path: docx });
+  let { value: body } = await mammoth.convertToHtml({ path: docx });
+
+  // The manual ends with the blank Veterinary Treatment Authorisation form
+  // (FORM 01). It stays in the designed PDF download but is deliberately NOT
+  // published on the web page — it's a signature document completed at
+  // book-in, not something to print-and-fill from the web. References to
+  // "Form 01" elsewhere in the manual remain. Cut from the form's start
+  // marker to the end (which also drops a garbled converted page-footer);
+  // fail the build if the marker moves so the form can't silently reappear.
+  const formCut = body.search(/<p>[^<]*FORM 01<\/p>/);
+  if (formCut === -1) {
+    throw new Error('buildPoliciesPage: "FORM 01" start marker not found — confirm the vet authorisation form is still excluded from /policies/');
+  }
+  body = body.slice(0, formCut);
+
+  // Strip conversion artefacts that leaked from the designed document's page
+  // furniture into the docx body: stray "RA01" margin badges, and repeated
+  // page-footer lines (script-font strapline came through as mojibake + the
+  // address/licence line). The index row "RA 01" (spaced) and prose licence
+  // mentions ("licence no. BOE028") don't match these patterns and remain.
+  body = body.replace(/<p>RA01<\/p>/g, '');
+  body = body.replace(/<p>---[^<]*<\/p>/g, ''); // "--- SOP 05" page-break markers
+  // Leaked page-footer paragraphs (may carry the strapline as an inline
+  // <img>, so allow tags before the licence text). Exact-case "Licence
+  // BOE028" is the footer format; prose says "licence no. BOE028".
+  body = body.replace(/<p>(?:(?!<\/p>)[\s\S])*?Licence BOE028[^<]*<\/p>/g, '');
+
   const textChars = body.replace(/<[^>]+>/g, '').length;
   if (textChars < 10000) throw new Error(`buildPoliciesPage: conversion produced only ${textChars} chars — refusing to publish a truncated policies page`);
 
