@@ -19,6 +19,9 @@ Live domain: **appleblossomcattery.com**
 ├── postbuild.js                   # SEO-head injector (exports injectSeoHead; used by prerender)
 ├── seo-head.html                  # Shared crawler-facing <head> tags (SEO source of truth)
 ├── gallery/                       # Drop gallery photos here (see "Gallery photos" below)
+├── documents/                     # Published PDFs (policies). To issue a new edition, replace
+│                                  #   apple-blossom-policies.pdf KEEPING THE SAME FILENAME —
+│                                  #   the site links to /documents/apple-blossom-policies.pdf
 ├── images/                        # og-card.jpg (social-share image); other photos self-hosted
 ├── robots.txt                     # Crawl directives + sitemap pointer (copied into dist/)
 ├── netlify.toml                   # Netlify config (build command + publish dir + functions)

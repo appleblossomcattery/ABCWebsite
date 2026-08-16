@@ -318,6 +318,14 @@ async function main() {
   base = base.split('Vale of Glamorgan Animal Welfare team, and fully insured')
     .join('Vale of Glamorgan Animal Welfare team (Animal Boarding Licence no. BOE028), and fully insured');
 
+  // Publish the full policies document (documents/apple-blossom-policies.pdf —
+  // a stable URL; replace the file keeping the same name when a new edition is
+  // issued). Linked from the Licensed & insured block, right after the licence
+  // number — the natural transparency context. The PDF is image-based (a
+  // designed document), so a PDF download is the right format, not HTML.
+  base = base.split('BOE028), and fully insured.<\\u002Fp>')
+    .join('BOE028), and fully insured. <a href=\\"/documents/apple-blossom-policies.pdf\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"color:#9B4880;font-weight:600\\">Read our full policies &amp; procedures</a> (PDF, 15&nbsp;MB).<\\u002Fp>');
+
   // Spell out the updates owners get — photos, videos and a FaceTime call on
   // request (their most-praised habit in reviews; the site under-mentioned it).
   // Present-continuous ending: these are live updates DURING the trip, unlike
@@ -408,6 +416,7 @@ async function main() {
   rmrf(DIST);
   fs.mkdirSync(DIST, { recursive: true });
   copyDir('images');
+  copyDir('documents');
   base = await buildGallery(base);
   fs.writeFileSync(path.join(DIST, 'index.html'), base);
 
