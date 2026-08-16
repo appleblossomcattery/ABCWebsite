@@ -43,6 +43,7 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
+const crypto = require('crypto');
 const puppeteer = require('puppeteer');
 const sharp = require('sharp');
 const mammoth = require('mammoth');
@@ -140,25 +141,24 @@ async function buildGallery(html) {
   fs.mkdirSync(thumbDir, { recursive: true });
   fs.mkdirSync(largeDir, { recursive: true });
 
+  // Every gallery image is served as WebP (~30-50% smaller than JPEG at the
+  // same visual quality; universally supported). Animated gifs additionally
+  // get a STATIC grid tile with the animation kept in the click-to-enlarge
+  // version only (the 12MB source gif costs the grid ~30KB this way).
   const outputs = [];
   for (const f of files) {
     const src = path.join(GALLERY_DIR, f);
+    const out = f.replace(/\.[^.]+$/, '.webp');
     if (/\.gif$/i.test(f)) {
-      // Animated gifs are enormous (the source here is 12MB). Convert to WebP:
-      // the grid tile is a STATIC first frame (~45KB, like every other tile)
-      // and the click-to-enlarge version keeps the animation as animated WebP
-      // (~1.4MB, only fetched when the lightbox opens). Same <img> markup.
-      const out = f.replace(/\.gif$/i, '.webp');
       await sharp(src).resize(600, 600, { fit: 'cover' }).webp({ quality: 75 }).toFile(path.join(thumbDir, out));
       await sharp(src, { animated: true }).resize(1600, 1200, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 75, effort: 4 }).toFile(path.join(largeDir, out));
-      outputs.push(out);
     } else {
       // .rotate() honours EXIF orientation (phone photos); cover-crop the
       // square grid tile, fit the lightbox within 1600x1200 without enlarging.
-      await sharp(src).rotate().resize(600, 600, { fit: 'cover', position: 'attention' }).toFile(path.join(thumbDir, f));
-      await sharp(src).rotate().resize(1600, 1200, { fit: 'inside', withoutEnlargement: true }).toFile(path.join(largeDir, f));
-      outputs.push(f);
+      await sharp(src).rotate().resize(600, 600, { fit: 'cover', position: 'attention' }).webp({ quality: 78 }).toFile(path.join(thumbDir, out));
+      await sharp(src).rotate().resize(1600, 1200, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 80 }).toFile(path.join(largeDir, out));
     }
+    outputs.push(out);
   }
 
   // Alt text is single-quoted in the bundle; strip any apostrophes to stay safe.
@@ -171,6 +171,40 @@ async function buildGallery(html) {
   }
   html = html.replace(/images = \[.*?\];/s, () => 'images = [' + entries + '];');
   console.log(`  gallery/: ${files.length} photos → resized + injected (grid 600px, lightbox 1600px)`);
+  return html;
+}
+
+// ---- bundle externalisation ------------------------------------------------
+// The DC bundle inlines its 2.2MB asset manifest and ~250KB template into the
+// HTML, and because every pre-rendered route embeds the full bundle, the whole
+// app re-downloads on every route. Extract both into content-hashed files
+// under /assets/ (cached immutably — see netlify.toml) and patch the
+// bootstrap to fetch them instead: the app then downloads ONCE and every
+// route's HTML drops to a fraction of the size. Fail-safe: if any anchor is
+// missing (a future design export changed the bootstrap), keep everything
+// inline and warn — heavier but correct.
+function externalizeBundle(html) {
+  const mMatch = html.match(/<script type="__bundler\/manifest">([\s\S]*?)<\/script>/);
+  const tMatch = html.match(/<script type="__bundler\/template">([\s\S]*?)<\/script>/);
+  const bootRe = /const manifestEl = document\.querySelector\('script\[type="__bundler\/manifest"\]'\);\s*const templateEl = document\.querySelector\('script\[type="__bundler\/template"\]'\);\s*if \(!manifestEl \|\| !templateEl\) \{[\s\S]*?\n\s*\}\s*const manifest = JSON\.parse\(manifestEl\.textContent\);\s*let template = JSON\.parse\(templateEl\.textContent\);/;
+  if (!mMatch || !tMatch || !bootRe.test(html)) {
+    console.warn('  bundle: externalisation anchors not found — keeping the bundle inline (heavier pages)');
+    return html;
+  }
+  const assetsDir = path.join(DIST, 'assets');
+  fs.mkdirSync(assetsDir, { recursive: true });
+  const h10 = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 10);
+  const mName = `app-manifest-${h10(mMatch[1])}.json`;
+  const tName = `app-template-${h10(tMatch[1])}.json`;
+  fs.writeFileSync(path.join(assetsDir, mName), mMatch[1]);
+  fs.writeFileSync(path.join(assetsDir, tName), tMatch[1]);
+  html = html.replace(mMatch[0], '').replace(tMatch[0], '');
+  html = html.replace(bootRe, () =>
+    `let [manifest, template] = await Promise.all([
+      fetch('/assets/${mName}').then((r) => { if (!r.ok) throw new Error('manifest fetch ' + r.status); return r.json(); }),
+      fetch('/assets/${tName}').then((r) => { if (!r.ok) throw new Error('template fetch ' + r.status); return r.json(); }),
+    ]);`);
+  console.log(`  bundle: manifest+template externalised to /assets/ (${(mMatch[1].length / 1048576).toFixed(1)}MB + ${(tMatch[1].length / 1024).toFixed(0)}KB, content-hashed, cached immutable)`);
   return html;
 }
 
@@ -430,6 +464,7 @@ async function main() {
   copyIfExists('documents/apple-blossom-policies.pdf', 'documents/apple-blossom-policies.pdf');
   await buildPoliciesPage();
   base = await buildGallery(base);
+  base = externalizeBundle(base);
   fs.writeFileSync(path.join(DIST, 'index.html'), base);
 
   const server = http.createServer((req, res) => {
@@ -663,6 +698,17 @@ async function buildPoliciesPage() {
   // BOE028" is the footer format; prose says "licence no. BOE028".
   body = body.replace(/<p>(?:(?!<\/p>)[\s\S])*?Licence BOE028[^<]*<\/p>/g, '');
 
+  // Exactly one <h1> per page (the page title below); demote the document's
+  // own heading levels one step so the outline nests under it. Full chain
+  // deepest-first — the docx natively uses h4s too, so a partial shift would
+  // collide two levels.
+  body = body
+    .replace(/<(\/?)h5\b/g, '<$1h6')
+    .replace(/<(\/?)h4\b/g, '<$1h5')
+    .replace(/<(\/?)h3\b/g, '<$1h4')
+    .replace(/<(\/?)h2\b/g, '<$1h3')
+    .replace(/<(\/?)h1\b/g, '<$1h2');
+
   const textChars = body.replace(/<[^>]+>/g, '').length;
   if (textChars < 10000) throw new Error(`buildPoliciesPage: conversion produced only ${textChars} chars — refusing to publish a truncated policies page`);
 
@@ -690,10 +736,11 @@ async function buildPoliciesPage() {
   .pdfcard a { color:#9B4880; font-family:'Quicksand',sans-serif; font-weight:700; text-decoration:none; font-size:15px; }
   .pdfcard small { display:block; color:#7C7D81; font-size:13px; margin-top:2px; }
   article { background:#fff; border:1px solid #ECE0E7; border-radius:22px; padding:clamp(22px,4vw,48px); margin-top:26px; overflow-wrap:break-word; }
-  article h1 { font-family:'Quicksand',sans-serif; font-weight:700; font-size:27px; color:#7C3A66; margin:38px 0 14px; }
-  article h1:first-child { margin-top:0; }
-  article h2 { font-family:'Quicksand',sans-serif; font-weight:700; font-size:21px; color:#9B4880; margin:30px 0 12px; }
-  article h3 { font-family:'Quicksand',sans-serif; font-weight:700; font-size:17px; color:#46474A; margin:24px 0 10px; }
+  article h2 { font-family:'Quicksand',sans-serif; font-weight:700; font-size:27px; color:#7C3A66; margin:38px 0 14px; }
+  article h2:first-child { margin-top:0; }
+  article h3 { font-family:'Quicksand',sans-serif; font-weight:700; font-size:21px; color:#9B4880; margin:30px 0 12px; }
+  article h4 { font-family:'Quicksand',sans-serif; font-weight:700; font-size:17px; color:#46474A; margin:24px 0 10px; }
+  article h5 { font-family:'Quicksand',sans-serif; font-weight:700; font-size:15.5px; color:#56565A; margin:20px 0 8px; }
   article p { font-size:15.5px; line-height:1.75; margin:0 0 13px; }
   article ul, article ol { margin:0 0 16px 22px; }
   article li { font-size:15.5px; line-height:1.7; margin-bottom:7px; }

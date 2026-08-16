@@ -23,3 +23,25 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+
+# Cache policy. Netlify's default (max-age=0, must-revalidate) forces a
+# revalidation round-trip on every asset on every visit. NOTE the content
+# under /images/ and /documents/ changes at STABLE URLs by design (gallery
+# photos and the policies PDF are replaced keeping the same filename), so
+# these are bounded lifetimes with stale-while-revalidate — NOT immutable.
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400, stale-while-revalidate=604800"
+
+[[headers]]
+  for = "/documents/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+
+# The app bundle assets are content-hashed filenames (see prerender.js
+# externalisation) — safe to cache forever.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
