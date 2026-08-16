@@ -365,6 +365,12 @@ async function main() {
      'or a mother cat and her kittens — so families can stay together. At 6.37 m² apiece, they are the largest accommodation in the house.'],
     ['the national market leader in cattery building.<\\u002Fp>\\n          <\\u002Fdiv>',
      'the national market leader in cattery building.<\\u002Fp>\\n            <p style=\\"font-size:16.5px;line-height:1.75;color:#56565A;margin:0\\">Every pen is separated from its neighbours by full-length sneeze barriers, and a metre-wide safety corridor runs the length of the cattery — so there are always two closed doors between your cat and the open air.<\\u002Fp>\\n          <\\u002Fdiv>'],
+    // Storm guards + outlook (Rhys, Aug 2026): drop-away external guards keep
+    // the pens dry in bad weather and open the cattery to fresh air, scent and
+    // sound on fine days — which, with the clear views, is what actually
+    // serves a cat's welfare rather than roaming outside.
+    ['— so there are always two closed doors between your cat and the open air.<\\u002Fp>',
+     '— so there are always two closed doors between your cat and the open air.<\\u002Fp>\\n            <p style=\\"font-size:16.5px;line-height:1.75;color:#56565A;margin:0\\">External storm guards keep the pens dry in wet weather — and on fine days we drop or remove them, filling the cattery with fresh air and the scents and sounds of the countryside while everything stays secure. Paired with every pen’s clear outlook, that gives your cat what really matters about the outdoors — the air, the smells, the birdsong, the watching — without any of its risks.<\\u002Fp>'],
   ];
   for (const [from, to] of penCopy) {
     if (base.includes(from)) base = base.split(from).join(to);
