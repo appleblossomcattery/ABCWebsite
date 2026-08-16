@@ -50,6 +50,14 @@ Live domain: **appleblossomcattery.com**
 
 ---
 
+## PIF membership badge (annual renewal)
+
+The Pet Industry Federation badge shows in the "Licensed & insured" section
+sitewide and is declared in the structured data (`memberOf`, member no.
+70099347). The badge artwork is year-stamped, so on each renewal (next:
+16 Aug 2027): regenerate `images/pif-member.webp` from the new official
+badge PNG, and update the year in the badge alt text in `prerender.js`.
+
 ## Gallery photos (add / replace / remove)
 
 The gallery is **driven entirely by the `gallery/` folder** — no design tool, no code. Each

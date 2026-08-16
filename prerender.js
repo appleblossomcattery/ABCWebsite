@@ -366,7 +366,12 @@ async function main() {
   // number — the natural transparency context. The PDF is image-based (a
   // designed document), so a PDF download is the right format, not HTML.
   base = base.split('BOE028), and fully insured.<\\u002Fp>')
-    .join('BOE028), and fully insured. <a href=\\"/policies/\\" style=\\"color:#9B4880;font-weight:600\\">Read our full policies &amp; procedures</a>.<\\u002Fp>');
+    .join('BOE028), and fully insured. <a href=\\"/policies/\\" style=\\"color:#9B4880;font-weight:600\\">Read our full policies &amp; procedures</a>.<\\u002Fp>'
+      // PIF membership badge (member no. 70099347, joined Aug 2026). On
+      // renewal: drop the new badge over images/pif-member.webp via
+      // PIF_Member_Logo_<year>.png and update the year in this alt text.
+      + '<a href=\\"https://www.petfederation.co.uk\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"display:inline-block;margin-top:14px\\">'
+      + '<img src=\\"/images/pif-member.webp\\" alt=\\"Pet Industry Federation — The Trade Association for Pet Businesses — 2026 Member\\" style=\\"width:220px;max-width:100%;height:auto;border-radius:10px;display:block\\"></a>');
 
   // Spell out the updates owners get — photos, videos and a FaceTime call on
   // request (their most-praised habit in reviews; the site under-mentioned it).
