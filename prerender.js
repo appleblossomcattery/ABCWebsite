@@ -397,6 +397,17 @@ async function main() {
       + '<a href=\\"https://www.petfederation.co.uk\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"display:inline-block;margin-top:14px\\">'
       + '<img src=\\"/images/pif-member.webp\\" alt=\\"Pet Industry Federation — The Trade Association for Pet Businesses — 2026 Member\\" style=\\"width:220px;max-width:100%;height:auto;border-radius:10px;display:block\\"></a>');
 
+  // Vaccination wall chart: a highlighted download card on the Vaccinations &
+  // Health page, injected right after "Cats cannot be accepted without proof
+  // of vaccination." — the exact chart the front desk checks cards against
+  // (documents/apple-blossom-vaccination-chart.pdf; replace the file keeping
+  // the same name when the chart is next reviewed).
+  base = base.split('Cats cannot be accepted without proof of vaccination.<\\u002Fstrong><\\u002Fp>')
+    .join('Cats cannot be accepted without proof of vaccination.<\\u002Fstrong><\\u002Fp>'
+      + '<div style=\\"background:#FBEEF4;border:1px solid #F0D8E4;border-radius:16px;padding:16px 18px;margin-top:14px\\">'
+      + '<p style=\\"margin:0 0 6px;font-weight:700;color:#7C3A66;font-family:Quicksand,sans-serif;font-size:16px\\">Which vaccines count?<\\u002Fp>'
+      + '<p style=\\"margin:0;font-size:15px;line-height:1.65;color:#56565A\\">Our vaccination chart lists every product we accept, what each one covers, and the dates we check \\u2014 the same chart our team uses when they check your cat\\u2019s card. If your vet uses something not on it, just ask \\u2014 we\\u2019ll confirm it with them. <a href=\\"/documents/apple-blossom-vaccination-chart.pdf\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"color:#9B4880;font-weight:700\\">Download the vaccination chart (PDF)<\\u002Fa>.<\\u002Fp><\\u002Fdiv>');
+
   // Spell out the updates owners get — photos, videos and a FaceTime call on
   // request (their most-praised habit in reviews; the site under-mentioned it).
   // Present-continuous ending: these are live updates DURING the trip, unlike
@@ -491,6 +502,9 @@ async function main() {
   // master (it feeds the generated /policies/ page, but is not itself served).
   fs.mkdirSync(path.join(DIST, 'documents'), { recursive: true });
   copyIfExists('documents/apple-blossom-policies.pdf', 'documents/apple-blossom-policies.pdf');
+  // The vaccination wall chart — the exact acceptance list the front desk uses,
+  // published for owners and linked from the Vaccinations & Health page.
+  copyIfExists('documents/apple-blossom-vaccination-chart.pdf', 'documents/apple-blossom-vaccination-chart.pdf');
   await buildPoliciesPage();
   base = await buildGallery(base);
   base = externalizeBundle(base);

@@ -67,7 +67,7 @@ const ROUTES = [
     path: '/vaccinations/',
     title: 'Vaccinations & Cat Health Requirements — Apple Blossom Cattery',
     description:
-      'What we ask before your cat’s stay: up-to-date cat flu and feline enteritis vaccinations, flea and parasite control, and medication we can administer. Cattery near Pontyclun.',
+      'What we ask before your cat’s stay: up-to-date cat flu and feline enteritis vaccinations, flea and parasite control, and medication we can administer — plus our downloadable vaccination chart of accepted products. Cattery near Pontyclun.',
   },
   {
     hash: '#/why',
