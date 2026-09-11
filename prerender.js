@@ -346,12 +346,7 @@ async function main() {
   // canonical/og/schema must all point at the apex, including post-hydration).
   base = base.split('www.appleblossomcattery.com').join('appleblossomcattery.com');
 
-  // Pen-day rates aligned to the locked commercial model (model.xlsx): 3 cats
-  // £24→£25, 4 cats £26→£27 (1- and 2-cat rates already match). These appear on
-  // the fees page and in terms clause 2.3, both inside the design bundle;
-  // correct them here until the design source is regenerated with the right
-  // figures. Only these two exact rates are touched — see prerender README note.
-  for (const [from, to] of [['£24', '£25'], ['£26', '£27']]) base = base.split(from).join(to);
+  // (The 3- and 4-cat rates — £25 / £27 — are now correct in the design source itself.)
 
   // Pen dimensions + disease-control architecture (source: the licensing
   // schedule "ABC Pen Dimensions" for BOE028 — family 6.37m², double 4.58m²,
