@@ -792,11 +792,18 @@ async function buildPoliciesPage() {
   footer a { color:#9B4880; font-weight:600; }
 </style>`;
 
+  // The PDF keeps its filename across editions and /documents/* is cached for
+  // a day with stale-while-revalidate, so a browser that has opened an older
+  // edition would keep serving it. A query string keyed to the file's content
+  // makes every new edition a new URL without renaming the file.
+  const pdfFile = path.join(ROOT, 'documents', 'apple-blossom-policies.pdf');
+  const pdfVersion = fs.existsSync(pdfFile) ? '?v=' + crypto.createHash('md5').update(fs.readFileSync(pdfFile)).digest('hex').slice(0, 8) : '';
+
   const page = '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + head + '\n</head>\n<body>\n' +
     '<div class="top"><a href="/"><svg width="26" height="26" viewBox="0 0 400 400" aria-hidden="true"><g transform="translate(200,196)"><circle cx="0" cy="-48" r="35" fill="#E89BC0"/><circle cx="46" cy="-15" r="35" fill="#CE6D9E"/><circle cx="28" cy="39" r="35" fill="#C58AB0"/><circle cx="-28" cy="39" r="35" fill="#E89BC0"/><circle cx="-46" cy="-15" r="35" fill="#F3C4DA"/><circle cx="0" cy="-4" r="21" fill="#9B4880"/></g></svg>Apple Blossom Cattery</a></div>\n' +
     '<main>\n<div class="eyebrow">Operations Manual · 2026 Edition</div>\n<h1 class="pagetitle">Policies &amp; Procedures</h1>\n' +
     '<p class="standfirst">Everything we do with your cat, written down — how a cat is booked in, fed, cleaned around, watched over and handed back, together with our risk assessment and privacy notice. We publish it because we have nothing to hide.</p>\n' +
-    '<div class="pdfcard"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9B4880" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><div><a href="/documents/apple-blossom-policies.pdf" target="_blank" rel="noopener">Download the designed print edition</a><small>PDF, 15&nbsp;MB — the same document, laid out for print</small></div></div>\n' +
+    '<div class="pdfcard"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9B4880" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><div><a href="/documents/apple-blossom-policies.pdf' + pdfVersion + '" target="_blank" rel="noopener">Download the designed print edition</a><small>PDF, 15&nbsp;MB — the same document, laid out for print</small></div></div>\n' +
     '<article>\n' + body + '\n</article>\n</main>\n' +
     '<footer>Apple Blossom Cattery, Cowbridge Road, Talygarn, Pontyclun CF72 9JU · <a href="/">appleblossomcattery.com</a> · <a href="/contact/">Contact us</a></footer>\n' +
     '</body>\n</html>\n';
