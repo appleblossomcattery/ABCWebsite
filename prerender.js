@@ -393,6 +393,27 @@ async function main() {
       + '<a href=\\"https://www.petfederation.co.uk\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"display:inline-block;margin-top:14px\\">'
       + '<img src=\\"/images/pif-member.webp\\" alt=\\"Pet Industry Federation — The Trade Association for Pet Businesses — 2026 Member\\" style=\\"width:220px;max-width:100%;height:auto;border-radius:10px;display:block\\"></a>');
 
+  // Point the bundle's OWN favicon links at the real files. The design tool
+  // inlines the icon as a data: URI, and because hydration replaces the whole
+  // document those links are the ones the browser ends up honouring — so the
+  // tab and address bar showed the bundle's plum tile while our published files
+  // were ignored, and Google (which cannot fetch a data: URI for a search
+  // result) fell back to its generic globe. Rewriting them here means one icon
+  // everywhere: the blossom from the site's own header.
+  {
+    const iconLinks = /<link rel=\\"(icon|apple-touch-icon)\\"[^>]*?href=\\"data:image\/svg\+xml;base64,[A-Za-z0-9+/=]+\\">/g;
+    const before = (base.match(iconLinks) || []).length;
+    if (before > 0) {
+      base = base.replace(iconLinks, (_m, rel) =>
+        rel === 'icon'
+          ? '<link rel=\\"icon\\" href=\\"/favicon.ico\\" sizes=\\"any\\">'
+          : '<link rel=\\"apple-touch-icon\\" href=\\"/apple-touch-icon.png\\">');
+      console.log(`  icons: ${before} inline data: URI favicon link(s) repointed at the published files`);
+    } else {
+      console.warn('  icons: no inline data: URI favicon links found — the bundle may now use real files (check the tab icon)');
+    }
+  }
+
   // Link the service-area pages from the address block, so they are reachable
   // from the site itself and not only from the sitemap — an unlinked landing
   // page carries almost no weight. The anchor is the visible address; it also

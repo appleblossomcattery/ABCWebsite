@@ -13,11 +13,14 @@
      so Google showed its generic globe beside the listing instead of the logo.
      The design bundle DOES inject an icon on hydration, but only as a data: URI,
      which Google cannot fetch for a search result — hence the globe.
-     These files are the REAL Apple Blossom logo (blossom, tree and cat), cut
-     from the full-resolution lockup embedded in the policies document at
-     word/media/image1.png, with the wordmark cropped off because it is
-     illegible at 16px. To reissue them, re-run the crop-and-render step in the
-     icon block of prerender.js against a new copy of that logo.
+     These files carry the site's OWN header mark — the pink blossom beside the
+     "Apple Blossom Cattery" wordmark, the same one browsers show in a bookmarks
+     bar — rendered from the circle coordinates in the bundle's thumbnail SVG
+     (#E89BC0 / #CE6D9E / #C58AB0 / #F3C4DA petals, #9B4880 centre, on #FBEEF4).
+     prerender.js ALSO repoints the bundle's own inline data: URI icon links at
+     these files: hydration replaces the document, so those links are the ones a
+     browser finally honours, and while they stood the tab showed a different
+     icon from the one published here.
      The files ALSO sit at the site root under their conventional names, because
      the design bundle replaces the whole <html> on hydration and strips these
      tags — a browser that re-asks then falls back to /favicon.ico and still
