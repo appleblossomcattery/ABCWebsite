@@ -909,6 +909,60 @@ const AREA_CSS = `
   .areas a { color:#9B4880; font-weight:600; }
   footer { text-align:center; padding:0 24px 50px; font-size:14px; color:#8A8B8F; line-height:1.7; }
   footer a { color:#9B4880; font-weight:600; }
+
+  /* ---- Motion -------------------------------------------------------------
+     These pages are plain generated HTML with no hydration, so motion here
+     cannot be undone by the design bundle. The easing and the keyframe name
+     deliberately match the bundle's own (abcUp, cubic-bezier(.22,.61,.36,1)),
+     so a visitor moving between a town page and the main site does not feel
+     the hand change. Transform and opacity only — nothing here reflows. */
+  @keyframes abcUp { from { opacity:0; transform:translateY(18px) } to { opacity:1; transform:none } }
+
+  section { transition: transform .26s cubic-bezier(.22,.61,.36,1), box-shadow .3s ease, border-color .2s ease; }
+  section:hover { transform:translateY(-3px); box-shadow:0 14px 34px rgba(124,58,102,.10); border-color:#E6D2DF; }
+
+  .cta a { transition: transform .26s cubic-bezier(.22,.61,.36,1), box-shadow .3s ease, background-color .2s ease; }
+  .cta .primary { box-shadow:0 8px 20px rgba(124,58,102,.22); }
+  .cta a:hover { transform:translateY(-2px); }
+  .cta .primary:hover { background:#7C3A66; box-shadow:0 12px 26px rgba(124,58,102,.30); }
+  .cta .ghost:hover { border-color:#9B4880; box-shadow:0 10px 22px rgba(124,58,102,.12); }
+  .cta a:active { transform:translateY(0); transition-duration:.05s; }
+
+  /* The village chips are the one flourish on the page: they lift a little on
+     hover, staggered on arrival so the list of places assembles itself. */
+  .places span { transition: transform .2s cubic-bezier(.22,.61,.36,1), background-color .2s ease; }
+  .places span:hover { transform:translateY(-2px); background:#F6DFEC; }
+
+  .facts li::before { transition: transform .2s cubic-bezier(.22,.61,.36,1); }
+  .facts li:hover::before { transform:scale(1.25); }
+
+  .top .brand svg { transition: transform .4s cubic-bezier(.22,.61,.36,1); }
+  .top .brand:hover svg { transform:rotate(8deg) scale(1.06); }
+
+  .top nav a, .areas a, footer a { transition: color .2s ease; }
+  .top nav a:hover, .areas a:hover, footer a:hover { color:#9B4880; }
+
+  /* Sections rise in on load, each a beat after the last. No scroll observer:
+     these pages are short, and a JS reveal that fails leaves content invisible
+     — this way the content is always there, animated or not. */
+  @media (prefers-reduced-motion: no-preference) {
+    main > section { animation: abcUp .5s cubic-bezier(.22,.61,.36,1) both; }
+    main > section:nth-of-type(1) { animation-delay:.04s }
+    main > section:nth-of-type(2) { animation-delay:.10s }
+    main > section:nth-of-type(3) { animation-delay:.16s }
+    main > section:nth-of-type(4) { animation-delay:.22s }
+    main > section:nth-of-type(5) { animation-delay:.28s }
+  }
+
+  /* Asked for stillness: everything drawn, nothing moving. The hover shadow
+     stays so "this is interactive" still reads without movement. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration:.01ms !important; animation-iteration-count:1 !important;
+      animation-name:none !important; transition-duration:.01ms !important; scroll-behavior:auto !important;
+    }
+    section:hover, .cta a:hover, .places span:hover { transform:none; }
+  }
 `;
 
 const BLOSSOM = '<svg width="26" height="26" viewBox="0 0 400 400" aria-hidden="true"><g transform="translate(200,196)"><circle cx="0" cy="-48" r="35" fill="#E89BC0"/><circle cx="46" cy="-15" r="35" fill="#CE6D9E"/><circle cx="28" cy="39" r="35" fill="#C58AB0"/><circle cx="-28" cy="39" r="35" fill="#E89BC0"/><circle cx="-46" cy="-15" r="35" fill="#F3C4DA"/><circle cx="0" cy="-4" r="21" fill="#9B4880"/></g></svg>';
