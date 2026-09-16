@@ -28,6 +28,66 @@
 <meta name="twitter:title" content="Apple Blossom Cattery — Luxury Cat Boarding, Pontyclun">
 <meta name="twitter:description" content="Award-winning, climate-controlled cat boarding in the Vale of Glamorgan. Rated 4.9★ on Google. Loved like our own.">
 <meta name="twitter:image" content="https://appleblossomcattery.com/images/og-card.jpg">
+<!-- Google Ads tag (AW-18160917926) with Consent Mode v2.
+     Advertising and analytics storage DEFAULT TO DENIED: nothing is stored until a
+     visitor accepts on the banner below, which is what UK PECR/GDPR require and what
+     Google expects for UK traffic. Google still models conversions from refusals.
+     The banner is written like floatingContactScript() in prerender.js — the design
+     bundle replaces the whole document on hydration, so it re-attaches on load,
+     hashchange and any document mutation, and remembers the choice in localStorage. -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent', 'default', {
+    ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+    analytics_storage: 'denied', functionality_storage: 'granted', security_storage: 'granted',
+    wait_for_update: 500
+  });
+  try {
+    var abcC = localStorage.getItem('abc-consent');
+    if (abcC === 'granted') gtag('consent', 'update', {
+      ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'granted'
+    });
+  } catch (e) {}
+  gtag('js', new Date());
+  gtag('config', 'AW-18160917926');
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18160917926"></script>
+<script>(function(){
+  var KEY='abc-consent';
+  function stored(){try{return localStorage.getItem(KEY);}catch(e){return 'denied';}}
+  function decide(v){
+    try{localStorage.setItem(KEY,v);}catch(e){}
+    if(window.gtag) gtag('consent','update',{
+      ad_storage:v==='granted'?'granted':'denied', ad_user_data:v==='granted'?'granted':'denied',
+      ad_personalization:v==='granted'?'granted':'denied', analytics_storage:v==='granted'?'granted':'denied'
+    });
+    var b=document.getElementById('abc-consent');if(b)b.remove();
+  }
+  function ensure(){try{
+    if(!document.body||stored()||document.getElementById('abc-consent'))return;
+    var w=document.createElement('div');
+    w.id='abc-consent';
+    w.setAttribute('role','dialog');
+    w.setAttribute('aria-label','Cookies');
+    w.style.cssText='position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;max-width:560px;margin:0 auto;background:#fff;border:1px solid #E4D5DE;border-radius:16px;box-shadow:0 14px 40px rgba(124,58,102,.18);padding:16px 18px;font-family:Quicksand,system-ui,sans-serif;color:#46474A;font-size:14px;line-height:1.5';
+    w.innerHTML='<div style="font-weight:700;margin-bottom:6px">Cookies</div>'
+      + '<div style="margin-bottom:12px;color:#56565A">We use cookies to measure how well our adverts work. They are only set if you accept \u2014 the site works either way.</div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + '<button type="button" data-abc-accept style="flex:none;border:none;background:#9B4880;color:#fff;font-weight:700;font-size:13.5px;padding:9px 18px;border-radius:999px;cursor:pointer;font-family:inherit">Accept</button>'
+      + '<button type="button" data-abc-reject style="flex:none;border:1px solid #E3D6DC;background:#fff;color:#7C7D81;font-weight:600;font-size:13.5px;padding:9px 16px;border-radius:999px;cursor:pointer;font-family:inherit">Reject</button>'
+      + '</div>';
+    w.querySelector('[data-abc-accept]').addEventListener('click',function(){decide('granted');});
+    w.querySelector('[data-abc-reject]').addEventListener('click',function(){decide('denied');});
+    document.body.appendChild(w);
+  }catch(e){}}
+  window.addEventListener('hashchange',ensure,true);
+  window.addEventListener('load',ensure,true);
+  try{new MutationObserver(ensure).observe(document,{childList:true});}catch(e){}
+  var n=0,iv=setInterval(function(){ensure();if(++n>30)clearInterval(iv);},300);
+  ensure();
+})();</script>
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
