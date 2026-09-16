@@ -127,6 +127,14 @@ async function penCheck(input) {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
+      // A 400 about the DATES is not a failure to record: CatBooker writes the
+      // enquiry before validating the range, so the enquiry is on the Enquiries
+      // page and only the availability answer is missing. Saying "NOT IN
+      // CATBOOKER" here would send staff hunting for a record that exists.
+      const msg = String((data && data.error) || '');
+      if (res.status === 400 && /date|start|end|range/i.test(msg)) {
+        return { possible: null, error: true, recorded: true, why: 'no usable dates were given, so availability could not be checked' };
+      }
       // Carry the reason out. A 401 (wrong secret), a 500 and a dead host used
       // to collapse into one indistinguishable "error", which is precisely why
       // a silent breakage took days to pin down.
@@ -150,7 +158,16 @@ function penCheckBlock(r) {
   var pensTxt = (r.options && r.options.length) ? r.options.map(function (o) { return esc(o.pen || o.name || ''); }).filter(Boolean).join(', ') : '';
   var movesTxt = (r.moves && r.moves.length) ? r.moves.map(function (m) { return esc((m.booking || m.cat || 'booking') + ': ' + (m.from || '?') + ' \u2192 ' + (m.to || '?') + (m.dates ? ' (' + m.dates + ')' : '')); }).join('; ') : '';
   var head, color, bg, border, detail;
-  if (r.error || r.possible == null) {
+  if (r.recorded && (r.error || r.possible == null)) {
+    // Recorded, but no availability answer \u2014 normally because the enquirer gave
+    // no dates. Not an alarm: the enquiry IS on the Enquiries page.
+    // NB both halves matter: a SUCCESSFUL check also carries recorded:true, and
+    // testing `recorded` alone put every successful enquiry in this branch and
+    // captioned a perfectly good availability answer "not run".
+    head = 'Pen Checker \u2014 not run'; color = '#6E6470'; bg = '#F4EFF2'; border = '#E4D5DE';
+    detail = 'No availability check was possible' + (r.why ? ' \u2014 ' + esc(r.why) : '') +
+      '. The enquiry has been recorded on the Enquiries page; please check the diary before replying.';
+  } else if (r.error || r.possible == null) {
     // Loud on purpose. This same call is what writes the enquiry into CatBooker,
     // so when it fails the enquiry exists ONLY in this email \u2014 staff must know
     // to add it by hand, and someone must know to fix the cause.
@@ -223,8 +240,14 @@ exports.handler = async (event) => {
   ];
 
   // Run the Pen Checker (via CatBooker) for the internal email + availability reply.
+  // ALWAYS called, even when no dates were given: this same call is what RECORDS
+  // the enquiry in CatBooker, so gating it on dates meant every dateless enquiry
+  // was emailed and then lost — it never reached the Enquiries page at all, and
+  // the date fields on the form are not required. CatBooker writes the enquiry
+  // first and rejects an unusable date range second (its rejectButRecord path),
+  // so calling it without dates still records the person.
   let pen = null;
-  if (f.start && f.end) {
+  {
     // Pass the enquirer through so CatBooker RECORDS the enquiry, not just answers
     // it. Every enquiry used to live in an inbox and be re-keyed by hand, so there
     // was no conversion rate and no record of demand turned away at peak.
