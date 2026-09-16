@@ -52,7 +52,26 @@
   gtag('js', new Date());
   gtag('config', 'AW-18160917926');
 </script>
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18160917926"></script>
+<script>(function(){
+  // The design bundle replaces the whole <html> on hydration, which removes a
+  // plain <script src> from the head — gtag() then queues into dataLayer and
+  // nothing ever reaches Google, so the tag reads as "not detected". Re-attach
+  // the loader the way persistScript()/floatingContactScript() do in
+  // prerender.js: on load, on hashchange and on any document mutation.
+  var SRC='https://www.googletagmanager.com/gtag/js?id=AW-18160917926';
+  function ensure(){try{
+    if(document.querySelector('script[data-abc-gtag]'))return;
+    var t=document.head||document.documentElement;if(!t)return;
+    var e=document.createElement('script');
+    e.async=true;e.src=SRC;e.setAttribute('data-abc-gtag','1');
+    t.appendChild(e);
+  }catch(e){}}
+  window.addEventListener('hashchange',ensure,true);
+  window.addEventListener('load',ensure,true);
+  try{new MutationObserver(ensure).observe(document,{childList:true});}catch(e){}
+  var n=0,iv=setInterval(function(){ensure();if(++n>30)clearInterval(iv);},300);
+  ensure();
+})();</script>
 <script>(function(){
   var KEY='abc-consent';
   function stored(){try{return localStorage.getItem(KEY);}catch(e){return 'denied';}}
