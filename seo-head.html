@@ -10,18 +10,19 @@
 <meta name="google-site-verification" content="pCz5NY37-HB33H42A_1ggj72ikh8U7P7n1UyzUHMj9c">
 <meta name="theme-color" content="#9B4880">
 <!-- Favicon. The Wix site served one; the rebuilt static site shipped without any,
-     so Google showed its generic globe beside the listing instead of the blossom.
-     The design bundle DOES inject a blossom on hydration, but only as a data: URI,
-     which Google cannot fetch for a search result — hence the globe. These files
-     reproduce that same artwork (see favicon.svg) so the browser tab and the
-     search listing show one blossom, not two designs; keep them in step if the
-     bundle's own icon ever changes.
+     so Google showed its generic globe beside the listing instead of the logo.
+     The design bundle DOES inject an icon on hydration, but only as a data: URI,
+     which Google cannot fetch for a search result — hence the globe.
+     These files are the REAL Apple Blossom logo (blossom, tree and cat), cut
+     from the full-resolution lockup embedded in the policies document at
+     word/media/image1.png, with the wordmark cropped off because it is
+     illegible at 16px. To reissue them, re-run the crop-and-render step in the
+     icon block of prerender.js against a new copy of that logo.
      The files ALSO sit at the site root under their conventional names, because
      the design bundle replaces the whole <html> on hydration and strips these
      tags — a browser that re-asks then falls back to /favicon.ico and still
      finds it. -->
 <link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="author" content="Apple Blossom Cattery">
 <meta name="geo.region" content="GB-VGL">

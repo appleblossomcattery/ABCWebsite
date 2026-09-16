@@ -516,7 +516,6 @@ async function main() {
   // happens here after hydration replaces the document — so the file must exist
   // at the root, not only be referenced from seo-head.html.
   copyIfExists('favicon.ico');
-  copyIfExists('favicon.svg');
   copyIfExists('apple-touch-icon.png');
   copyIfExists('icon-512.png');
   // Publish only the PDF from documents/ — the .docx is the private working
@@ -946,7 +945,6 @@ function areaPageHtml(a) {
 <link rel="canonical" href="${url}">
 <meta name="theme-color" content="#9B4880">
 <link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Apple Blossom Cattery">
