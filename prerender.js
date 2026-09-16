@@ -414,6 +414,27 @@ async function main() {
     }
   }
 
+  // NO motion CSS is injected into the design-tool pages, deliberately.
+  //
+  // A previous attempt added hover-lift, image zoom and a blanket
+  // prefers-reduced-motion gate here. All three were wrong:
+  //
+  //   · The bundle ALREADY ships them, author-named and better tuned —
+  //     [data-lift] (translateY(-5px) with a shadow) on 36 elements and
+  //     [data-zoom] (img scale 1.07) on 25 of them on the gallery alone.
+  //   · The bundle ALREADY honours reduced motion, in its own rule:
+  //     @media (prefers-reduced-motion:reduce){ .abc-reveal.abc-in{animation:
+  //     abcFadeOnly ...} [data-lift]:hover{transform:none!important} ... }
+  //   · Worst of all, a blanket `animation-name:none!important` under reduce
+  //     BLANKS THE SITE. Every .abc-reveal starts at opacity:0 and is carried
+  //     to visible by its abcUp/abcFadeOnly animation; kill the animation and
+  //     the content never appears. Measured on the live page: computed opacity
+  //     went 1 → 0 across 28 elements — for precisely the visitors the gate was
+  //     meant to protect.
+  //
+  // If motion is ever wanted on these pages, add it with data-lift/data-zoom in
+  // the design tool, not with CSS injected from here.
+
   // Link the service-area pages from the address block, so they are reachable
   // from the site itself and not only from the sitemap — an unlinked landing
   // page carries almost no weight. The anchor is the visible address; it also
