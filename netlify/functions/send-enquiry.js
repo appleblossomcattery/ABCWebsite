@@ -103,16 +103,22 @@ async function sendEmail(key, payload) {
   return { ok: res.ok, status: res.status, data };
 }
 
+// The production Pen Checker. Kept as a fallback because this URL is not a
+// secret, and treating a missing env var as fatal cost us two days of enquiries:
+// website enquiries are RECORDED by this call (CatBooker writes the enquiry row
+// inside /api/pen-check), so when the variable went missing the emails kept
+// arriving and the Enquiries page silently stopped filling up. Only the secret
+// is genuinely secret; the address can safely have a default.
+const PEN_CHECK_URL = 'https://catbooker.netlify.app/api/pen-check';
+
 async function penCheck(input) {
-  const url = process.env.CATBOOKER_API_URL;
+  const url = process.env.CATBOOKER_API_URL || PEN_CHECK_URL;
   const secret = process.env.PEN_CHECK_SECRET || '';
-  if (!url) {
-    // Not configured: report UNKNOWN, never a guess. This used to answer "available
-    // for up to 4 cats, pen Meadow 2" — a pen that doesn't exist — so a lost env var
-    // silently told staff a full house had space. Availability only ever comes from
-    // CatBooker's Pen Checker; if we can't reach it, we say so.
-    return { possible: null, error: true, unconfigured: true };
-  }
+  // Availability is never guessed — it used to answer "available for up to 4
+  // cats, pen Meadow 2", a pen that doesn't exist, so a lost env var told staff
+  // a full house had space. It only ever comes from CatBooker; if we cannot
+  // reach it we say so. But we DO still try, using the default address.
+  if (!secret) return { possible: null, error: true, why: 'PEN_CHECK_SECRET is not set on this deploy' };
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -120,11 +126,22 @@ async function penCheck(input) {
       body: JSON.stringify(input)
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) return { possible: null, error: true };
+    if (!res.ok) {
+      // Carry the reason out. A 401 (wrong secret), a 500 and a dead host used
+      // to collapse into one indistinguishable "error", which is precisely why
+      // a silent breakage took days to pin down.
+      return {
+        possible: null,
+        error: true,
+        why: res.status === 401
+          ? 'CatBooker rejected the shared secret (401) — PEN_CHECK_SECRET does not match'
+          : 'CatBooker answered ' + res.status + ' at ' + url
+      };
+    }
     const possible = (data.possible != null) ? data.possible : data.available;
-    return { possible: possible === true, options: data.options || [], moves: data.moves || [] };
-  } catch (_) {
-    return { possible: null, error: true };
+    return { possible: possible === true, options: data.options || [], moves: data.moves || [], recorded: true };
+  } catch (err) {
+    return { possible: null, error: true, why: 'could not reach ' + url + ' (' + (err && err.message ? err.message : 'network error') + ')' };
   }
 }
 
@@ -134,10 +151,13 @@ function penCheckBlock(r) {
   var movesTxt = (r.moves && r.moves.length) ? r.moves.map(function (m) { return esc((m.booking || m.cat || 'booking') + ': ' + (m.from || '?') + ' \u2192 ' + (m.to || '?') + (m.dates ? ' (' + m.dates + ')' : '')); }).join('; ') : '';
   var head, color, bg, border, detail;
   if (r.error || r.possible == null) {
-    head = 'Pen Checker \u2014 could not run'; color = '#6E6470'; bg = '#F4EFF2'; border = '#E4D5DE';
-    detail = r.unconfigured
-      ? 'The availability check is not configured on this deploy (CATBOOKER_API_URL) \u2014 please check the diary.'
-      : 'The automatic availability check did not complete \u2014 please check the diary.';
+    // Loud on purpose. This same call is what writes the enquiry into CatBooker,
+    // so when it fails the enquiry exists ONLY in this email \u2014 staff must know
+    // to add it by hand, and someone must know to fix the cause.
+    head = 'Pen Checker \u2014 could not run \u2014 THIS ENQUIRY IS NOT IN CATBOOKER';
+    color = '#9A2C2C'; bg = '#FBEDED'; border = '#F0C9C9';
+    detail = 'The availability check did not complete, so this enquiry has NOT been recorded on the Enquiries page \u2014 please check the diary and add it by hand.' +
+      (r.why ? ' Cause: ' + esc(r.why) + '.' : '');
   } else if (r.possible) {
     head = 'Pen Checker \u2014 AVAILABLE'; color = '#2F6B45'; bg = '#EAF6EE'; border = '#BFE3CC';
     detail = (pensTxt ? 'Fits in: ' + pensTxt + '. ' : '') +
