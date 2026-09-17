@@ -360,13 +360,13 @@ async function main() {
     ['or a mother cat and her kittens — so families can stay together.',
      'or a mother cat and her kittens — so families can stay together. At 6.37 m² apiece, they are the largest individual pens in the house.'],
     ['the national market leader in cattery building.<\\u002Fp>\\n          <\\u002Fdiv>',
-     'the national market leader in cattery building.<\\u002Fp>\\n            <p style=\\"font-size:16.5px;line-height:1.75;color:#56565A;margin:14px 0 0\\">Every pen is separated from its neighbours by full-length sneeze barriers, and a metre-wide safety corridor runs the length of the cattery — so fresh air reaches your cat through the open-faced pen front, but there are always two doors between them and getting outside.<\\u002Fp>\\n          <\\u002Fdiv>'],
+     'the national market leader in cattery building.<\\u002Fp>\\n            <p style=\\"font-size:16.5px;line-height:1.75;color:#56565A;margin:14px 0 0\\">Every pen is separated from its neighbours by full-length sneeze barriers, and the pens themselves are constructed so cats can scent the fresh air whilst remaining secure indoors — with a metre-wide safety corridor running the length of the cattery.<\\u002Fp>\\n          <\\u002Fdiv>'],
     // Storm guards + outlook (Rhys, Aug 2026): drop-away external guards keep
     // the pens dry in bad weather and open the cattery to fresh air, scent and
     // sound on fine days — which, with the clear views, is what actually
     // serves a cat's welfare rather than roaming outside.
-    ['— so fresh air reaches your cat through the open-faced pen front, but there are always two doors between them and getting outside.<\\u002Fp>',
-     '— so fresh air reaches your cat through the open-faced pen front, but there are always two doors between them and getting outside.<\\u002Fp>\\n            <p style=\\"font-size:16.5px;line-height:1.75;color:#56565A;margin:14px 0 0\\">External storm guards keep the pens dry in wet weather — and on fine days we drop or remove them, filling the cattery with fresh air and the scents and sounds of the countryside while everything stays secure. Paired with every pen’s clear outlook, that gives your cat what really matters about the outdoors — the air, the smells, the birdsong, the watching — without any of its risks.<\\u002Fp>'],
+    ['— with a metre-wide safety corridor running the length of the cattery.<\\u002Fp>',
+     '— with a metre-wide safety corridor running the length of the cattery.<\\u002Fp>\\n            <p style=\\"font-size:16.5px;line-height:1.75;color:#56565A;margin:14px 0 0\\">External storm guards keep the pens dry in wet weather — and on fine days we drop or remove them, filling the cattery with fresh air and the scents and sounds of the countryside while everything stays secure. Paired with every pen’s clear outlook, that gives your cat what really matters about the outdoors — the air, the smells, the birdsong, the watching — without any of its risks.<\\u002Fp>'],
   ];
   for (const [from, to] of penCopy) {
     if (base.includes(from)) base = base.split(from).join(to);
@@ -1089,7 +1089,7 @@ function areaPageHtml(a) {
     <h2>The essentials</h2>
     <ul class="facts">
       <li>Licensed and inspected by the Vale of Glamorgan Animal Welfare team — Animal Boarding Licence no. ${escH(FACTS.licence)} — and fully insured.</li>
-      <li>Purpose-built in 2019 and fully climate-controlled, with sneeze barriers between pens and a safety corridor — fresh air reaches every pen, but there are always two doors between your cat and getting outside.</li>
+      <li>Purpose-built in 2019 and fully climate-controlled, with sneeze barriers between pens, and pens constructed so cats can scent the fresh air whilst remaining secure indoors behind a safety corridor.</li>
       <li>Rated ${escH(FACTS.rating)} out of 5 from ${escH(FACTS.reviews)} Google reviews, and 5 out of 5 from ${escH(FACTS.yellVotes)} reviews on Yell.</li>
       <li>Charged per pen per day, from £17 a day for one cat — cats from the same household share a pen and a rate.</li>
       <li>Medication given where we can safely give it, at no extra charge. <a href="/vaccinations/">Vaccinations are checked on arrival, every time</a>.</li>
