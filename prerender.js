@@ -198,7 +198,6 @@ function stripEmDashes(html) {
     ["Talygarn, Pontyclun \u2014 and, following our 2026 upgrade, now", "Talygarn, Pontyclun. Following our 2026 upgrade, now"],
     ["temperature \u2014 summer and winter alike \u2014 for the comfort", "temperature, summer and winter alike, for the comfort"],
     ["only part of the story \u2014 more importantly", "only part of the story: more importantly"],
-    ["veterinary nurse \u2014 medication and special needs welcome", "veterinary nurse; medication and special needs welcome"],
     ["family pens \u2014 with room for timid cats", "family pens, with room for timid cats"],
     ["visits, viewings and inspections \u2014 please call ahead", "visits, viewings and inspections; please call ahead"],
     ["flying colours \u2014 no improvement actions noted", "flying colours, with no improvement actions noted"],
@@ -217,7 +216,6 @@ function stripEmDashes(html) {
     ["by definition, less \u2014 and we", "by definition, less, and we"],
     ["all-inclusive \u2014 there are no extra charges", "all-inclusive: there are no extra charges"],
     ["4 January) \u2014 counting the arrival", "4 January), counting the arrival"],
-    ["Please just ask \u2014 our team includes", "Please just ask; our team includes"],
     ["from the cattery \u2014 warm daylight", "from the cattery: warm daylight"],
     ["Good news \u2014 it looks like", "Good news: it looks like"],
     ["look possible \u2014 but please treat", "look possible, but please treat"],
@@ -422,6 +420,17 @@ async function main() {
 
   // (The 3- and 4-cat rates — £25 / £27 — are now correct in the design source itself.)
 
+  // The girls' published ages, kept current by a scheduled task that bumps
+  // these on each birthday and redeploys (the birthdays themselves are
+  // deliberately NOT in this public repo). The design copy hard-codes the
+  // ages; this stamp keeps them right even when the design export lags.
+  const AGES = { phoebe: 8, pippa: 5 };
+  if (/Phoebe \(\d+\) and Pippa \(\d+\)/.test(base)) {
+    base = base.replace(/Phoebe \(\d+\) and Pippa \(\d+\)/g, `Phoebe (${AGES.phoebe}) and Pippa (${AGES.pippa})`);
+  } else {
+    console.warn('  ages: "Phoebe (n) and Pippa (n)" pattern not found in the bundle, ages not stamped');
+  }
+
   // Pen dimensions + disease-control architecture (source: the licensing
   // schedule "ABC Pen Dimensions" for BOE028 — family 6.37m², double 4.58m²,
   // walk-in singles 2.60–3.52m²; plus full-length sneeze barriers in every pen
@@ -450,6 +459,12 @@ async function main() {
   // ("rest assured", "state-of-the-art", "we understand that…") — swap them
   // for plainer wording without touching the voice. Same fail-safe pattern.
   const copyFixes = [
+    ["ICC-trained staff and a qualified veterinary nurse — medication and special needs welcome",
+     "ICC-trained staff, and a team member with veterinary nursing qualifications; medication and special needs welcome"],
+    ["Charmaine, a qualified veterinary nurse with substantial clinical experience",
+     "Charmaine, who holds veterinary nursing qualifications and has substantial clinical experience"],
+    ["Please just ask — our team includes a qualified veterinary nurse.",
+     "Please just ask; our team includes someone with veterinary nursing qualifications."],
     ["Happy guests, in their own words and whiskers",
      "Happy guests, in photos and kind words"],
     ["Rest assured your loved ones are in good hands",
