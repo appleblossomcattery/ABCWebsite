@@ -71,7 +71,7 @@ const AREAS = [
       h2: 'Why Cowbridge owners come up the road to us',
       paras: [
         'Since we opened in 2019, more than 110 households with Cowbridge and Vale village postcodes have boarded their cats here. Most found us the way people in the Vale find anything — someone they know had used us, and said so.',
-        'The cattery was purpose-built, not converted. Every pen is climate-controlled, with full-length sneeze barriers between neighbours and a metre-wide safety corridor running the length of the building, so there are always two closed doors between your cat and the open air. Our walk-in singles run from 2.6 to 3.5 m², doubles give 4.58 m², family pens 6.37 m², and three pairs of doubles can open into 9.16 m² suites for households that board several cats together.',
+        'The cattery was purpose-built, not converted. Every pen is climate-controlled, with full-length sneeze barriers between neighbours and a metre-wide safety corridor running the length of the building. The pen fronts are open-faced, so cats can scent the fresh air — but there are always two doors between them and getting outside. Our walk-in singles run from 2.6 to 3.5 m², doubles give 4.58 m², family pens 6.37 m², and three pairs of doubles can open into 9.16 m² suites for households that board several cats together.',
         'Viewings are welcome and always by appointment, so whoever shows you round is not also trying to settle an arrival. Come and see it before you book — we would rather you did.',
       ],
     },
@@ -158,7 +158,7 @@ const AREAS = [
       h2: 'You have a choice locally — here is ours',
       paras: [
         'There is more than one cattery within reach of Pontypridd, and we would always rather you looked at several and chose well than took anyone\'s word for it, ours included.',
-        'So here is what we would ask you to compare. Is the building purpose-built and climate-controlled, or converted? Is there a full-length sneeze barrier between each pen and its neighbours, and a safety corridor so there are two closed doors between a cat and the open air? Can you read the cattery\'s policies and procedures before you book? Ours are published in full on this site. Who holds the licence, and what is its number? Ours is BOE028, issued by the Vale of Glamorgan.',
+        'So here is what we would ask you to compare. Is the building purpose-built and climate-controlled, or converted? Is there a full-length sneeze barrier between each pen and its neighbours, and a safety corridor so there are always two doors between a cat and getting outside? Can you read the cattery\'s policies and procedures before you book? Ours are published in full on this site. Who holds the licence, and what is its number? Ours is BOE028, issued by the Vale of Glamorgan.',
         'Then come and see it. Viewings are by appointment, seven days a week, and we will show you the actual pen your cat would have.',
       ],
     },
