@@ -184,6 +184,79 @@ async function buildGallery(html) {
 // route's HTML drops to a fraction of the size. Fail-safe: if any anchor is
 // missing (a future design export changed the bootstrap), keep everything
 // inline and warn — heavier but correct.
+
+// ---- em-dash removal -------------------------------------------------------
+// Owner instruction (18 Sep 2026): no em dashes in the site copy. This runs
+// on the fully-injected bundle, LAST, so injection anchors that quote dashed
+// design copy still match. Each entry is a hand-chosen rewrite (comma, colon,
+// semicolon, full stop or restructure), never a blind swap. Deliberately left
+// alone: the signature dash before "Laura & Rhys", verbatim customer review
+// text, and code/CSS comments (invisible).
+function stripEmDashes(html) {
+  const fixes = [
+    ["Apple Blossom Cattery \u2014 Luxury Cat Boarding", "Apple Blossom Cattery - Luxury Cat Boarding"],
+    ["Talygarn, Pontyclun \u2014 and, following our 2026 upgrade, now", "Talygarn, Pontyclun. Following our 2026 upgrade, now"],
+    ["temperature \u2014 summer and winter alike \u2014 for the comfort", "temperature, summer and winter alike, for the comfort"],
+    ["only part of the story \u2014 more importantly", "only part of the story: more importantly"],
+    ["veterinary nurse \u2014 medication and special needs welcome", "veterinary nurse; medication and special needs welcome"],
+    ["family pens \u2014 with room for timid cats", "family pens, with room for timid cats"],
+    ["visits, viewings and inspections \u2014 please call ahead", "visits, viewings and inspections; please call ahead"],
+    ["flying colours \u2014 no improvement actions noted", "flying colours, with no improvement actions noted"],
+    ["visit almost every day \u2014 which means", "visit almost every day, which means"],
+    ["leader in cattery building \u2014 but the business", "leader in cattery building, but the business"],
+    ["visits, viewings and inspections \u2014 we would genuinely rather", "visits, viewings and inspections; we would genuinely rather"],
+    ["here almost every day \u2014 so we", "here almost every day, so we"],
+    ["look after it \u2014 and your cats \u2014 at least as well", "look after it, and your cats, at least as well"],
+    ["wide range of accommodation \u2014 single, double and family pens", "wide range of accommodation: single, double and family pens"],
+    ["same household \u2014 or a mother cat and her kittens \u2014 so families can stay together", "same household, or a mother cat and her kittens, so families can stay together"],
+    ["in the price \u2014 for every guest", "in the price, for every guest"],
+    ["special attention every day \u2014 insulin injections for diabetes, asthma inhalers, tablets and drops \u2014 giving each dose", "special attention every day: insulin injections for diabetes, asthma inhalers, tablets and drops, giving each dose"],
+    ["rooms into tiers \u2014 standard ones", "rooms into tiers: standard ones"],
+    ["however you like \u2014 to the cat", "however you like: to the cat"],
+    ["for every guest \u2014 warmth, quiet, security", "for every guest: warmth, quiet, security"],
+    ["by definition, less \u2014 and we", "by definition, less, and we"],
+    ["all-inclusive \u2014 there are no extra charges", "all-inclusive: there are no extra charges"],
+    ["4 January) \u2014 counting the arrival", "4 January), counting the arrival"],
+    ["Please just ask \u2014 our team includes", "Please just ask; our team includes"],
+    ["from the cattery \u2014 warm daylight", "from the cattery: warm daylight"],
+    ["Good news \u2014 it looks like", "Good news: it looks like"],
+    ["look possible \u2014 but please treat", "look possible, but please treat"],
+    ["currently free \u2014 we", "currently free. We"],
+    ["Thank you \u2014 enquiry received", "Thank you, enquiry received"],
+    ["Almost there \u2014 just hit send", "Almost there: just hit send"],
+    ["send to us \u2014 please just hit send", "send to us. Please just hit send"],
+    ["ever-changing \u2014 so we warmly invite", "ever-changing, so we warmly invite"],
+    ["for availability \u2014 it", "for availability; it"],
+    ["Doors open \u2014 always welcome", "Doors open: always welcome"],
+    ["07855 475851 \u2014 we", "07855 475851; we"],
+    ["certificate on arrival \u2014 we", "certificate on arrival; we"],
+    ["climate controlled year-round \u2014 kept at a steady", "climate controlled year-round, kept at a steady"],
+    [">Yes \u2014 a local pick-up", ">Yes: a local pick-up"],
+    ["welcome by arrangement \u2014 a quick call ahead", "welcome by arrangement; a quick call ahead"],
+    ["choice of catteries \u2014 we hope", "choice of catteries, and we hope"],
+    ["toilet habits \u2014 so anything untoward", "toilet habits, so anything untoward"],
+    ["your homework \u2014 and don", "your homework, and don"],
+    ["feed your cat \u2014 and can you bring", "feed your cat, and can you bring"],
+    ["climate-controlled environment \u2014 your cat will be safe", "climate-controlled environment: your cat will be safe"],
+    ["in good hands \u2014 but don", "in good hands, but don"],
+    ["additional cleaning \u2014 \u00a350 for flea treatment", "additional cleaning: \u00a350 for flea treatment"],
+    ["personal site visit \u2014 where you sign", "personal site visit, where you sign"],
+    ["after which \u2014 if no further bookings have been received \u2014 it will be deleted", "after which, if no further bookings have been received, it will be deleted"],
+    ["two-pen suites \u2014 the roomiest accommodation we offer.", "two-pen suites, the roomiest accommodation we offer."],
+    ["secure indoors \u2014 with a metre-wide safety corridor", "secure indoors, with a metre-wide safety corridor"],
+    ["dry in wet weather \u2014 and on fine days", "dry in wet weather, and on fine days"],
+    ["Pet Industry Federation \u2014 The Trade Association for Pet Businesses \u2014 2026 Member", "Pet Industry Federation, The Trade Association for Pet Businesses, 2026 Member"],
+    ["during their stay \u2014 and a FaceTime call", "during their stay, and a FaceTime call"],
+  ];
+  let fixed = 0;
+  for (const [from, to] of fixes) {
+    if (html.includes(from)) { html = html.split(from).join(to); fixed++; }
+    else console.warn('  dashes: anchor missing, not fixed: ' + from.slice(0, 50) + '\u2026');
+  }
+  console.log(`  dashes: ${fixed}/${fixes.length} rewrites applied`);
+  return html;
+}
+
 function externalizeBundle(html) {
   const mMatch = html.match(/<script type="__bundler\/manifest">([\s\S]*?)<\/script>/);
   const tMatch = html.match(/<script type="__bundler\/template">([\s\S]*?)<\/script>/);
@@ -479,7 +552,7 @@ async function main() {
     .join('Cats cannot be accepted without proof of vaccination.<\\u002Fstrong><\\u002Fp>'
       + '<div style=\\"background:#FBEEF4;border:1px solid #F0D8E4;border-radius:16px;padding:16px 18px;margin-top:14px\\">'
       + '<p style=\\"margin:0 0 6px;font-weight:700;color:#7C3A66;font-family:Quicksand,sans-serif;font-size:16px\\">Which vaccines count?<\\u002Fp>'
-      + '<p style=\\"margin:0;font-size:15px;line-height:1.65;color:#56565A\\">Our vaccination chart lists every product we accept, what each one covers, and the dates we check \\u2014 the same chart our team uses when they check your cat\\u2019s card. If your vet uses something not on it, just ask \\u2014 we\\u2019ll confirm it with them. <a href=\\"/documents/apple-blossom-vaccination-chart.pdf\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"color:#9B4880;font-weight:700\\">Download the vaccination chart (PDF)<\\u002Fa>.<\\u002Fp><\\u002Fdiv>');
+      + '<p style=\\"margin:0;font-size:15px;line-height:1.65;color:#56565A\\">Our vaccination chart lists every product we accept, what each one covers, and the dates we check, the same chart our team uses when they check your cat\\u2019s card. If your vet uses something not on it, just ask; we\\u2019ll confirm it with them. <a href=\\"/documents/apple-blossom-vaccination-chart.pdf\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"color:#9B4880;font-weight:700\\">Download the vaccination chart (PDF)<\\u002Fa>.<\\u002Fp><\\u002Fdiv>');
 
   // Spell out the updates owners get — photos, videos and a FaceTime call on
   // request (their most-praised habit in reviews; the site under-mentioned it).
@@ -588,6 +661,7 @@ async function main() {
   await buildPoliciesPage();
   buildAreaPages();
   base = await buildGallery(base);
+  base = stripEmDashes(base);
   base = externalizeBundle(base);
   fs.writeFileSync(path.join(DIST, 'index.html'), base);
 
@@ -762,7 +836,7 @@ function write404() {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Page not found — Apple Blossom Cattery</title>
+<title>Page not found - Apple Blossom Cattery</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -786,7 +860,7 @@ function write404() {
     </g>
   </svg>
   <h1>We can't find that page</h1>
-  <p>The page or file you're after isn't here — the link may be old, or things may have moved around.</p>
+  <p>The page or file you're after isn't here; the link may be old, or things may have moved around.</p>
   <a class="btn" href="/">Back to the cattery</a><a class="plain" href="/contact/">Contact us</a>
 </div>
 </body>
@@ -850,10 +924,10 @@ async function buildPoliciesPage() {
 
   const head = `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Policies &amp; Procedures — Apple Blossom Cattery</title>
-<meta name="description" content="The full operations manual for Apple Blossom Cattery: booking in, feeding, cleaning, medication, supervision, risk assessment and privacy — everything we do with your cat, written down and published.">
+<title>Policies &amp; Procedures - Apple Blossom Cattery</title>
+<meta name="description" content="The full operations manual for Apple Blossom Cattery: booking in, feeding, cleaning, medication, supervision, risk assessment and privacy: everything we do with your cat, written down and published.">
 <link rel="canonical" href="${BASE_URL}/policies/">
-<meta property="og:title" content="Policies &amp; Procedures — Apple Blossom Cattery">
+<meta property="og:title" content="Policies &amp; Procedures - Apple Blossom Cattery">
 <meta property="og:description" content="Everything we do with your cat, written down. Our full operations manual, published.">
 <meta property="og:url" content="${BASE_URL}/policies/">
 <meta property="og:image" content="${BASE_URL}/images/og-card.jpg">
@@ -900,8 +974,8 @@ async function buildPoliciesPage() {
   const page = '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + head + '\n</head>\n<body>\n' +
     '<div class="top"><a href="/"><svg width="26" height="26" viewBox="0 0 400 400" aria-hidden="true"><g transform="translate(200,196)"><circle cx="0" cy="-48" r="35" fill="#E89BC0"/><circle cx="46" cy="-15" r="35" fill="#CE6D9E"/><circle cx="28" cy="39" r="35" fill="#C58AB0"/><circle cx="-28" cy="39" r="35" fill="#E89BC0"/><circle cx="-46" cy="-15" r="35" fill="#F3C4DA"/><circle cx="0" cy="-4" r="21" fill="#9B4880"/></g></svg>Apple Blossom Cattery</a></div>\n' +
     '<main>\n<div class="eyebrow">Operations Manual · 2026 Edition</div>\n<h1 class="pagetitle">Policies &amp; Procedures</h1>\n' +
-    '<p class="standfirst">Everything we do with your cat, written down — how a cat is booked in, fed, cleaned around, watched over and handed back, together with our risk assessment and privacy notice. We publish it because we have nothing to hide.</p>\n' +
-    '<div class="pdfcard"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9B4880" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><div><a href="/documents/apple-blossom-policies.pdf' + pdfVersion + '" target="_blank" rel="noopener">Download the designed print edition</a><small>PDF, 15&nbsp;MB — the same document, laid out for print</small></div></div>\n' +
+    '<p class="standfirst">Everything we do with your cat, written down: how a cat is booked in, fed, cleaned around, watched over and handed back, together with our risk assessment and privacy notice. We publish it because we have nothing to hide.</p>\n' +
+    '<div class="pdfcard"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9B4880" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><div><a href="/documents/apple-blossom-policies.pdf' + pdfVersion + '" target="_blank" rel="noopener">Download the designed print edition</a><small>PDF, 15&nbsp;MB; the same document, laid out for print</small></div></div>\n' +
     '<article>\n' + body + '\n</article>\n</main>\n' +
     '<footer>Apple Blossom Cattery, Cowbridge Road, Talygarn, Pontyclun CF72 9JU · <a href="/">appleblossomcattery.com</a> · <a href="/contact/">Contact us</a></footer>\n' +
     '</body>\n</html>\n';
@@ -1106,13 +1180,13 @@ function areaPageHtml(a) {
   <section>
     <h2>The essentials</h2>
     <ul class="facts">
-      <li>Licensed and inspected by the Vale of Glamorgan Animal Welfare team — Animal Boarding Licence no. ${escH(FACTS.licence)} — and fully insured.</li>
+      <li>Licensed and inspected by the Vale of Glamorgan Animal Welfare team, Animal Boarding Licence no. ${escH(FACTS.licence)}, and fully insured.</li>
       <li>Purpose-built in 2019 and fully climate-controlled, with sneeze barriers between pens, and pens constructed so cats can scent the fresh air whilst remaining secure indoors behind a safety corridor.</li>
       <li>Rated ${escH(FACTS.rating)} out of 5 from ${escH(FACTS.reviews)} Google reviews, and 5 out of 5 from ${escH(FACTS.yellVotes)} reviews on Yell.</li>
-      <li>Charged per pen per day, from £17 a day for one cat — cats from the same household share a pen and a rate.</li>
+      <li>Charged per pen per day, from £17 a day for one cat; cats from the same household share a pen and a rate.</li>
       <li>Medication given where we can safely give it, at no extra charge. <a href="/vaccinations/">Vaccinations are checked on arrival, every time</a>.</li>
       <li>Members of the Pet Industry Federation, and our <a href="/policies/">full policies and procedures are published</a> for anyone to read before booking.</li>
-      <li>Ask about <a href="/pickup/">pick-up and drop-off</a> when you enquire — we can often collect and return, depending on the day and the distance.</li>
+      <li>Ask about <a href="/pickup/">pick-up and drop-off</a> when you enquire; we can often collect and return, depending on the day and the distance.</li>
     </ul>
   </section>
 
