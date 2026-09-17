@@ -72,7 +72,7 @@ const AREAS = [
       paras: [
         'Since we opened in 2019, more than 110 households with Cowbridge and Vale village postcodes have boarded their cats here. Most found us the way people in the Vale find anything — someone they know had used us, and said so.',
         'The cattery was purpose-built, not converted. Every pen is climate-controlled, with full-length sneeze barriers between neighbours and a metre-wide safety corridor running the length of the building. The pens are constructed so cats can scent the fresh air whilst remaining secure indoors. Our walk-in singles run from 2.6 to 3.5 m², doubles give 4.58 m², family pens 6.37 m², and three pairs of doubles can open into 9.16 m² suites for households that board several cats together.',
-        'Viewings are welcome and always by appointment, so whoever shows you round is not also trying to settle an arrival. Come and see it before you book — we would rather you did.',
+        'Come and see it before you book — we would rather you did than took a webpage\'s word for it.',
       ],
     },
   },
@@ -99,7 +99,7 @@ const AREAS = [
     angle: {
       h2: 'What a twenty-minute drive buys you',
       paras: [
-        'There are catteries closer to Bridgend town than we are. Nearly two hundred Bridgend-area households drive past them, which tells you more than anything we could write here.',
+        'There are catteries closer to Bridgend town than we are. Nearly two hundred Bridgend-area households drive past them to get to us.',
         'What they are driving to is a purpose-built, fully climate-controlled cattery in open countryside: warm in February, genuinely cool in August, with external storm guards that keep the pens dry in bad weather and come off on fine days so the building fills with fresh air and the sounds of the fields. Every pen looks out over that view.',
         'We are licensed and inspected by the Vale of Glamorgan Animal Welfare team (Animal Boarding Licence no. BOE028), fully insured, and members of the Pet Industry Federation. Our full policies and procedures — how every cat is booked in, fed, medicated and watched over — are published in full on this site, which is not something most catteries will do.',
       ],
@@ -129,7 +129,7 @@ const AREAS = [
       h2: 'A city cat in the countryside',
       paras: [
         'More than a hundred Cardiff households board with us, and the reason they give is nearly always the same: they wanted their cat out of the city for the fortnight, not parked in it.',
-        'Every pen here is climate-controlled and looks out over fields. On fine days the external storm guards come off and the cattery fills with fresh air, birdsong and the smell of the countryside — which is what actually matters to a cat about "outdoors", without any of the risk of letting one roam.',
+        'Every pen here is climate-controlled and looks out over fields. On fine days the external storm guards come off and the cattery fills with fresh air, birdsong and the smell of the countryside, so a cat gets the interest of the outdoors without taking its chances.',
         'We charge per pen per day, from £17 a day for one cat, with no themed-room tiers and no hidden extras. Two cats from the same household share a pen at a shared rate rather than paying twice.',
       ],
     },
@@ -155,11 +155,11 @@ const AREAS = [
       'Rhydyfelin', 'Treforest', 'Hawthorn', 'Glyncoch', 'Cilfynydd',
     ],
     angle: {
-      h2: 'You have a choice locally — here is ours',
+      h2: 'You have a choice locally — compare us properly',
       paras: [
         'There is more than one cattery within reach of Pontypridd, and we would always rather you looked at several and chose well than took anyone\'s word for it, ours included.',
         'So here is what we would ask you to compare. Is the building purpose-built and climate-controlled, or converted? Is there a full-length sneeze barrier between each pen and its neighbours, and a safety corridor? Are the pens constructed so a cat can scent the fresh air whilst remaining secure indoors? Can you read the cattery\'s policies and procedures before you book? Ours are published in full on this site. Who holds the licence, and what is its number? Ours is BOE028, issued by the Vale of Glamorgan.',
-        'Then come and see it. Viewings are by appointment, seven days a week, and we will show you the actual pen your cat would have.',
+        'Then come and see it for yourself before you decide.',
       ],
     },
   },
@@ -186,7 +186,7 @@ const AREAS = [
     angle: {
       h2: 'The valleys are not an afterthought here',
       paras: [
-        'Plenty of catteries in this corner of south Wales write their pages for Cardiff and Cowbridge and never mention the valleys at all. Our booking system says that is a strange way to run a cattery: sixty-five valley households have boarded with us in the last two years alone.',
+        'Plenty of catteries in this corner of south Wales write their pages for Cardiff and Cowbridge and never mention the valleys at all. We think that is a strange way to run one: sixty-five valley households have boarded with us in the last two years alone.',
         'Everything we offer is the same whichever direction you come from — climate-controlled, purpose-built pens with field views, per-pen pricing from £17 a day, medication given at no extra charge where we can safely give it, and a licensed, insured, inspected cattery behind it.',
         'If the drive down is the thing putting you off, ask about pick-up and drop-off when you enquire. We can often collect and return, depending on the day and how far it is.',
       ],
@@ -206,7 +206,7 @@ const AREAS = [
       'Barry, Penarth, Dinas Powys and Llantwit Major are about twenty-five minutes away across the Vale — and, usefully for a coast that flies a lot, we are only about ten miles from Cardiff Airport.',
     journey: [
       'From Barry the quickest run is Five Mile Lane (A4226) to the A48, west to Cowbridge and then north up Cowbridge Road to Talygarn: about twelve miles, twenty-five minutes. From Penarth and Dinas Powys, the A4232 and M4 do the same job in a similar time. From Llantwit Major it is the B4265 and A48.',
-      'For anyone flying, that geography is the whole point: the cattery sits between you and the airport rather than the other way round, so the cat is settled and you are still twenty minutes from the terminal.',
+      'For anyone flying, the cattery is on the way: drop your cat off, and the terminal is another twenty minutes down the road.',
     ],
     places: [
       'Barry', 'Barry Island', 'Penarth', 'Dinas Powys', 'Sully', 'Rhoose',
@@ -215,9 +215,9 @@ const AREAS = [
     angle: {
       h2: 'Holidays, flights and long stays',
       paras: [
-        'A good share of our Vale coast bookings are built around flights, and long stays are ordinary here rather than exceptional. Cats who are with us for two or three weeks get the same routine every day, and their owners get an update and photographs while they are away.',
+        'A good share of our Vale coast bookings are built around flights, and long stays are ordinary here. Cats who are with us for two or three weeks get the same routine every day, and their owners get an update and photographs while they are away.',
         'If your cat needs medication, say so when you book: tablets, liquids, topicals and, in most cases, injections are given at no extra charge, and we will confirm anything unusual with your own vet before the stay.',
-        'Vaccinations are checked on arrival, every time, without exception — our accepted-product chart is published on this site so you can check your cat\'s card against it before you travel rather than at the door.',
+        'Vaccinations are checked on arrival, every time, without exception — our accepted-product chart is published on this site so you can check your cat\'s card against it before you set off.',
       ],
     },
   },
@@ -244,9 +244,9 @@ const AREAS = [
     angle: {
       h2: 'The cattery your neighbours use',
       paras: [
-        'A third of everyone on our books lives within a few miles of the cattery. In a village that is not a marketing claim, it is a reputation — the sort you cannot advertise your way out of if you get it wrong.',
+        'A third of everyone on our books lives within a few miles of the cattery. In a village you only get that through word of mouth, and you would lose it just as fast if you let people down.',
         'We are licensed and inspected by the Vale of Glamorgan Animal Welfare team (Animal Boarding Licence no. BOE028), fully insured, and members of the Pet Industry Federation. Rated 4.9 out of 5 from 71 Google reviews and 5 out of 5 from 60 reviews on Yell.',
-        'If you have not been up before, come and look round. Viewings are by appointment so that whoever shows you the pens is not also settling an arrival.',
+        'If you have not been up before, come and look round — most of our neighbours did exactly that before their first booking.',
       ],
     },
   },

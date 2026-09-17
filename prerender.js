@@ -366,11 +366,29 @@ async function main() {
     // sound on fine days — which, with the clear views, is what actually
     // serves a cat's welfare rather than roaming outside.
     ['— with a metre-wide safety corridor running the length of the cattery.<\\u002Fp>',
-     '— with a metre-wide safety corridor running the length of the cattery.<\\u002Fp>\\n            <p style=\\"font-size:16.5px;line-height:1.75;color:#56565A;margin:14px 0 0\\">External storm guards keep the pens dry in wet weather — and on fine days we drop or remove them, filling the cattery with fresh air and the scents and sounds of the countryside while everything stays secure. Paired with every pen’s clear outlook, that gives your cat what really matters about the outdoors — the air, the smells, the birdsong, the watching — without any of its risks.<\\u002Fp>'],
+     '— with a metre-wide safety corridor running the length of the cattery.<\\u002Fp>\\n            <p style=\\"font-size:16.5px;line-height:1.75;color:#56565A;margin:14px 0 0\\">External storm guards keep the pens dry in wet weather — and on fine days we drop or remove them, filling the cattery with fresh air and the scents and sounds of the countryside while everything stays secure. Paired with every pen’s clear outlook, that means there is something to smell, hear and watch all day, at no risk to the cat.<\\u002Fp>'],
   ];
   for (const [from, to] of penCopy) {
     if (base.includes(from)) base = base.split(from).join(to);
     else console.warn('  pens: anchor missing, copy not injected: ' + from.slice(0, 50) + '…');
+  }
+
+  // De-AI pass (Sep 2026): the design copy carried a few stock phrases
+  // ("rest assured", "state-of-the-art", "we understand that…") — swap them
+  // for plainer wording without touching the voice. Same fail-safe pattern.
+  const copyFixes = [
+    ["Happy guests, in their own words and whiskers",
+     "Happy guests, in photos and kind words"],
+    ["Rest assured your loved ones are in good hands",
+     "Your cat will be in good hands"],
+    ["and we understand that a cattery can only grow and be successful if it has happy customers who return to us and tell their friends how pleased they are",
+     "and a cattery only grows one way: happy customers who come back, and tell their friends"],
+    ["A state-of-the-art, purpose-built, climate-controlled environment",
+     "A purpose-built, climate-controlled environment"],
+  ];
+  for (const [from, to] of copyFixes) {
+    if (base.includes(from)) base = base.split(from).join(to);
+    else console.warn('  copy: anchor missing, phrase not de-AIed: ' + from.slice(0, 50) + '…');
   }
 
   // Publish the animal boarding licence number where the site already mentions
@@ -768,7 +786,7 @@ function write404() {
     </g>
   </svg>
   <h1>We can't find that page</h1>
-  <p>The page or file you're after isn't here — it may have moved, or the link may be out of date. Everything about the cattery is one click away.</p>
+  <p>The page or file you're after isn't here — the link may be old, or things may have moved around.</p>
   <a class="btn" href="/">Back to the cattery</a><a class="plain" href="/contact/">Contact us</a>
 </div>
 </body>
