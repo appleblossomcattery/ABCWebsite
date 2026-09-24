@@ -479,6 +479,28 @@ async function main() {
     else console.warn('  copy: anchor missing, phrase not de-AIed: ' + from.slice(0, 50) + '…');
   }
 
+  // Nearby dates for the enquirer (Sep 2026): when their own dates are full,
+  // CatBooker's deeper checker also returns up to three nearby date ranges
+  // that would work. The function passes them through as `alternatives`
+  // (dates only — never pens, moves or reasons); the form stores them and the
+  // "Not currently available" screen shows them. Three patches on the design
+  // bundle, each fail-safe: if a re-export moves an anchor the site still
+  // works, just without the nearby dates, and the build says so.
+  const altPatches = [
+    ["var finishServer = function (avail) { if (done) return; done = true; self.setState({ submitted: true, sending: false, result: avail });",
+     "var finishServer = function (avail, alts) { if (done) return; done = true; self.setState({ submitted: true, sending: false, result: avail, alts: (alts && alts.length) ? alts : [] });"],
+    ["finishServer(a === 'available' ? 'available' : (a === 'unavailable' ? 'unavailable' : 'unknown'));",
+     "finishServer(a === 'available' ? 'available' : (a === 'unavailable' ? 'unavailable' : 'unknown'), data && data.alternatives);"],
+    ["resMailto: this.state.result === 'mailto'",
+     "resMailto: this.state.result === 'mailto', hasAlts: !!(this.state.alts && this.state.alts.length), altText: (this.state.alts || []).map(function (x) { return x.label; }).join(' \u00b7 ')"],
+    ["will check the diary and get back to you as soon as we can. A confirmation is on its way to your inbox.<\\u002Fp>",
+     "will check the diary and get back to you as soon as we can. A confirmation is on its way to your inbox.<\\u002Fp>\\n                  <sc-if value=\\\"{{hasAlts}}\\\" hint-placeholder-val=\\\"{{ false }}\\\"><p style=\\\"font-size:15.5px;line-height:1.65;color:#56565A;margin:0 auto 22px;max-width:390px\\\">We do, however, look to have space on these nearby dates: <strong style=\\\"color:#46474A\\\">{{altText}}<\\u002Fstrong>. If any of those would suit, just say so when we get in touch.<\\u002Fp><\\u002Fsc-if>"],
+  ];
+  for (const [from, to] of altPatches) {
+    if (base.includes(from)) base = base.split(from).join(to);
+    else console.warn('  nearby dates: anchor missing, enquirer will not see them: ' + from.slice(0, 60) + '…');
+  }
+
   // Publish the animal boarding licence number where the site already mentions
   // the Vale of Glamorgan inspection (audit: the number reassures and is
   // expected in the sector). Held by Rhys & Laura Johns as individuals — there

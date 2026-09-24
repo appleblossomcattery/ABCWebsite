@@ -147,10 +147,29 @@ async function penCheck(input) {
       };
     }
     const possible = (data.possible != null) ? data.possible : data.available;
-    return { possible: possible === true, options: data.options || [], moves: data.moves || [], recorded: true };
+    // The deeper checker (Sep 2026) also says WHICH nearby dates would work and,
+    // when full, WHY. Nearby dates go to the enquirer as well as to staff; the
+    // reason, the pens and the moves are for the cattery's eyes only.
+    return { possible: possible === true, options: data.options || [], moves: data.moves || [], alternatives: altLabels(data.alternatives), reason: data.reason || '', recorded: true };
   } catch (err) {
     return { possible: null, error: true, why: 'could not reach ' + url + ' (' + (err && err.message ? err.message : 'network error') + ')' };
   }
+}
+
+// "15-22 Aug" / "28 Jul - 3 Aug" from YYYY-MM-DD dates, for staff and enquirer alike.
+function dmy(iso) {
+  var d = new Date(iso + 'T12:00:00');
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+function altLabels(alts) {
+  if (!Array.isArray(alts)) return [];
+  return alts.slice(0, 3).map(function (a) {
+    if (!a || !a.start || !a.end) return null;
+    var s = dmy(a.start), e = dmy(a.end);
+    var label = (s.split(' ')[1] === e.split(' ')[1]) ? s.split(' ')[0] + '-' + e : s + ' - ' + e;
+    return { start: a.start, end: a.end, label: label, moves: Number(a.moves) || 0 };
+  }).filter(Boolean);
 }
 
 function penCheckBlock(r) {
@@ -181,7 +200,16 @@ function penCheckBlock(r) {
       (movesTxt ? 'Only with these pen moves \u2014 they must be made before the stay: ' + movesTxt + '.' : 'No moves needed.');
   } else {
     head = 'Pen Checker \u2014 NOT currently available'; color = '#8A6224'; bg = '#FBF1E7'; border = '#F0D8BE';
-    detail = 'No combination of pens fits these dates, even after re-shuffling.';
+    detail = 'No combination of pens fits these dates, even after re-shuffling.' + (r.reason ? ' ' + esc(r.reason) : '');
+  }
+  var alts = (r.alternatives && r.alternatives.length) ? r.alternatives : [];
+  if (alts.length && !(r.error || r.possible == null)) {
+    detail += '<div style="margin-top:8px"><b>Nearby dates that would work:</b> ' + alts.map(function (a) {
+      return esc(a.label) + (a.moves ? ' (' + a.moves + ' move' + (a.moves === 1 ? '' : 's') + ')' : ' (no moves)');
+    }).join(' \u00b7 ') + (r.possible ? '' : '. The enquirer has been shown these dates (without the moves).') + '</div>';
+  }
+  if (!r.error && r.possible === false) {
+    detail += '<div style="margin-top:8px;color:#7C7D81">For a deeper answer \u2014 including whether an existing booking could be split to make room \u2014 run these dates through CatBooker\u2019s Pen checker. That advice is for the cattery only.</div>';
   }
   return '<div style="margin-top:20px;background:' + bg + ';border:1px solid ' + border + ';border-radius:14px;padding:14px 16px">' +
     '<div style="font-family:' + HEAD_FONT + ';font-weight:700;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:' + color + ';margin-bottom:6px">' + head + '</div>' +
@@ -317,7 +345,10 @@ exports.handler = async (event) => {
     let ackOk = false;
     try { const res2 = await sendEmail(KEY, customer); ackOk = res2.ok; } catch (_) { ackOk = false; }
     const available = (!pen || pen.error || pen.possible == null) ? 'unknown' : (pen.possible ? 'available' : 'unavailable');
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, id: res1.data && res1.data.id, ack: ackOk, available: available }) };
+    // Nearby dates reach the enquirer only when their own dates are full: dates
+    // and nothing else \u2014 no pens, no moves, no reasons.
+    const alternatives = (available === 'unavailable' && pen && pen.alternatives) ? pen.alternatives.map(function (a) { return { start: a.start, end: a.end, label: a.label }; }) : [];
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, id: res1.data && res1.data.id, ack: ackOk, available: available, alternatives: alternatives }) };
   } catch (err) {
     return { statusCode: 502, headers, body: JSON.stringify({ error: 'Send error', detail: String(err) }) };
   }
