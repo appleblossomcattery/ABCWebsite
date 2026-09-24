@@ -219,7 +219,6 @@ function stripEmDashes(html) {
     ["from the cattery \u2014 warm daylight", "from the cattery: warm daylight"],
     ["Good news \u2014 it looks like", "Good news: it looks like"],
     ["look possible \u2014 but please treat", "look possible, but please treat"],
-    ["currently free \u2014 we", "currently free. We"],
     ["Thank you \u2014 enquiry received", "Thank you, enquiry received"],
     ["Almost there \u2014 just hit send", "Almost there: just hit send"],
     ["send to us \u2014 please just hit send", "send to us. Please just hit send"],
@@ -487,14 +486,20 @@ async function main() {
   // bundle, each fail-safe: if a re-export moves an anchor the site still
   // works, just without the nearby dates, and the build says so.
   const altPatches = [
+    // The "no" screen (Rhys, 24 Sep 2026): a full diary is never "no space" —
+    // the cattery is almost full and will review the diary and be in touch.
+    ["Not currently available<\\u002Fh2>",
+     "The cattery is almost full on those dates<\\u002Fh2>"],
+    ["Those dates aren't currently free — we've received your details and will check the diary and get back to you as soon as we can. A confirmation is on its way to your inbox.<\\u002Fp>",
+     "We are almost full between those dates, so we will review the diary carefully and contact you shortly. A confirmation is on its way to your inbox.<\\u002Fp>"],
     ["var finishServer = function (avail) { if (done) return; done = true; self.setState({ submitted: true, sending: false, result: avail });",
      "var finishServer = function (avail, alts) { if (done) return; done = true; self.setState({ submitted: true, sending: false, result: avail, alts: (alts && alts.length) ? alts : [] });"],
     ["finishServer(a === 'available' ? 'available' : (a === 'unavailable' ? 'unavailable' : 'unknown'));",
      "finishServer(a === 'available' ? 'available' : (a === 'unavailable' ? 'unavailable' : 'unknown'), data && data.alternatives);"],
     ["resMailto: this.state.result === 'mailto'",
      "resMailto: this.state.result === 'mailto', hasAlts: !!(this.state.alts && this.state.alts.length), altText: (this.state.alts || []).map(function (x) { return x.label; }).join(' \u00b7 ')"],
-    ["will check the diary and get back to you as soon as we can. A confirmation is on its way to your inbox.<\\u002Fp>",
-     "will check the diary and get back to you as soon as we can. A confirmation is on its way to your inbox.<\\u002Fp>\\n                  <sc-if value=\\\"{{hasAlts}}\\\" hint-placeholder-val=\\\"{{ false }}\\\"><p style=\\\"font-size:15.5px;line-height:1.65;color:#56565A;margin:0 auto 22px;max-width:390px\\\">We do, however, look to have space on these nearby dates: <strong style=\\\"color:#46474A\\\">{{altText}}<\\u002Fstrong>. If any of those would suit, just say so when we get in touch.<\\u002Fp><\\u002Fsc-if>"],
+    ["review the diary carefully and contact you shortly. A confirmation is on its way to your inbox.<\\u002Fp>",
+     "review the diary carefully and contact you shortly. A confirmation is on its way to your inbox.<\\u002Fp>\\n                  <sc-if value=\\\"{{hasAlts}}\\\" hint-placeholder-val=\\\"{{ false }}\\\"><p style=\\\"font-size:15.5px;line-height:1.65;color:#56565A;margin:0 auto 22px;max-width:390px\\\">We do, however, look to have space on these nearby dates: <strong style=\\\"color:#46474A\\\">{{altText}}<\\u002Fstrong>. If any of those would suit, just say so when we get in touch.<\\u002Fp><\\u002Fsc-if>"],
   ];
   for (const [from, to] of altPatches) {
     if (base.includes(from)) base = base.split(from).join(to);

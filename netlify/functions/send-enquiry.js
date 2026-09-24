@@ -119,12 +119,20 @@ async function penCheck(input) {
   // a full house had space. It only ever comes from CatBooker; if we cannot
   // reach it we say so. But we DO still try, using the default address.
   if (!secret) return { possible: null, error: true, why: 'PEN_CHECK_SECRET is not set on this deploy' };
+  // Wait at most 6 s. This function itself has a 10 s limit and must still send
+  // two emails; and the form falls back to a mailto screen if WE take too long.
+  // A slow answer is treated as "unknown" (the enquiry is still recorded by
+  // CatBooker, which carries on after we stop waiting) — never as unavailable.
+  const ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 6000) : null;
   try {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + secret, 'X-Pen-Check-Secret': secret },
-      body: JSON.stringify(input)
+      body: JSON.stringify(input),
+      signal: ctrl ? ctrl.signal : undefined
     });
+    if (timer) clearTimeout(timer);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       // A 400 about the DATES is not a failure to record: CatBooker writes the
@@ -152,6 +160,10 @@ async function penCheck(input) {
     // reason, the pens and the moves are for the cattery's eyes only.
     return { possible: possible === true, options: data.options || [], moves: data.moves || [], alternatives: altLabels(data.alternatives), reason: data.reason || '', recorded: true };
   } catch (err) {
+    if (timer) clearTimeout(timer);
+    if (err && (err.name === 'AbortError' || /abort/i.test(String(err.message)))) {
+      return { possible: null, error: true, recorded: true, why: 'CatBooker took longer than 6 s to answer, so no availability answer was shown; the enquiry is still recorded there' };
+    }
     return { possible: null, error: true, why: 'could not reach ' + url + ' (' + (err && err.message ? err.message : 'network error') + ')' };
   }
 }
