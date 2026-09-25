@@ -506,6 +506,22 @@ async function main() {
     else console.warn('  nearby dates: anchor missing, enquirer will not see them: ' + from.slice(0, 60) + '…');
   }
 
+  // The week rule on the enquiry form's dates (owner, 25 Sep 2026), the same
+  // as CatBooker's own date fields: the departure box shows a week after the
+  // arrival by default, a default departure follows the arrival when it moves,
+  // and a departure the visitor chose stays while it still follows. The
+  // departure box also cannot be set before the arrival. Fail-safe like the
+  // patches above: if a re-export moves an anchor, the form still works.
+  const datePatches = [
+    ["if (!this._h[k]) this._h[k] = (e) => {\\n      const v = e.target.value;\\n      this.setState(s => ({ form: { ...s.form, [k]: v }, errors: { ...s.errors, [k]: undefined } }));\\n    };", "if (!this._h[k]) this._h[k] = (e) => {\\n      const v = e.target.value;\\n      /* The week rule (CatBooker, 25 Sep 2026): the departure box shows a week after the arrival by default, and a default follows the arrival; a departure the visitor chose stays while it still follows. */\\n      var shift7 = function (iso) { var t = new Date(iso + 'T00:00:00Z'); if (isNaN(t.getTime())) return ''; t.setUTCDate(t.getUTCDate() + 7); return t.toISOString().slice(0, 10); };\\n      this.setState(s => {\\n        var form = { ...s.form, [k]: v }; var endChosen = !!s.endChosen;\\n        if (k === 'start' && v) { if (!(endChosen && form.end && form.end > v)) { form.end = shift7(v); endChosen = false; } }\\n        if (k === 'end') { endChosen = !!v; }\\n        return { form: form, endChosen: endChosen, errors: { ...s.errors, [k]: undefined } };\\n      });\\n    };"],
+    ["<input value=\\\"{{end}}\\\" sc-camel-on-input=\\\"{{onEnd}}\\\" type=\\\"date\\\"", "<input value=\\\"{{end}}\\\" sc-camel-on-input=\\\"{{onEnd}}\\\" type=\\\"date\\\" min=\\\"{{start}}\\\""],
+    ["resetForm = () => this.setState({ submitted: false, sending: false, result: null, errors: {},", "resetForm = () => this.setState({ submitted: false, sending: false, result: null, endChosen: false, errors: {},"],
+  ];
+  for (const [from, to] of datePatches) {
+    if (base.includes(from)) base = base.split(from).join(to);
+    else console.warn('  week rule: anchor missing, dates will not follow it: ' + from.slice(0, 60) + '…');
+  }
+
   // Publish the animal boarding licence number where the site already mentions
   // the Vale of Glamorgan inspection (audit: the number reassures and is
   // expected in the sector). Held by Rhys & Laura Johns as individuals — there
