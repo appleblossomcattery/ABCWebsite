@@ -110,6 +110,7 @@ async function sendEmail(key, payload) {
 // arriving and the Enquiries page silently stopped filling up. Only the secret
 // is genuinely secret; the address can safely have a default.
 const PEN_CHECK_URL = 'https://catbooker.netlify.app/api/pen-check';
+const PEN_CHECK_WAIT_MS = 7500;
 
 async function penCheck(input) {
   const url = process.env.CATBOOKER_API_URL || PEN_CHECK_URL;
@@ -119,12 +120,15 @@ async function penCheck(input) {
   // a full house had space. It only ever comes from CatBooker; if we cannot
   // reach it we say so. But we DO still try, using the default address.
   if (!secret) return { possible: null, error: true, why: 'PEN_CHECK_SECRET is not set on this deploy' };
-  // Wait at most 6 s. This function itself has a 10 s limit and must still send
-  // two emails; and the form falls back to a mailto screen if WE take too long.
+  // Wait at most 7.5 s. CatBooker now answers within 4 s of starting (its own
+  // time budget), so the rest is headroom for cold starts and the network: at 6 s
+  // a 2-move enquiry on 30 Sep 2026 ran out and the enquirer saw "enquiry
+  // received" with no answer. This function has a 10 s limit and must still send
+  // two emails (sent together, below); the form's own mailto fallback is at 15 s.
   // A slow answer is treated as "unknown" (the enquiry is still recorded by
   // CatBooker, which carries on after we stop waiting) — never as unavailable.
   const ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
-  const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 6000) : null;
+  const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, PEN_CHECK_WAIT_MS) : null;
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -162,7 +166,7 @@ async function penCheck(input) {
   } catch (err) {
     if (timer) clearTimeout(timer);
     if (err && (err.name === 'AbortError' || /abort/i.test(String(err.message)))) {
-      return { possible: null, error: true, recorded: true, why: 'CatBooker took longer than 6 s to answer, so no availability answer was shown; the enquiry is still recorded there' };
+      return { possible: null, error: true, recorded: true, why: 'CatBooker took longer than ' + (PEN_CHECK_WAIT_MS / 1000) + ' s to answer, so no availability answer was shown; the enquiry is still recorded there' };
     }
     return { possible: null, error: true, why: 'could not reach ' + url + ' (' + (err && err.message ? err.message : 'network error') + ')' };
   }
@@ -348,14 +352,17 @@ exports.handler = async (event) => {
   };
 
   try {
-    // The internal email is the one that must succeed.
-    const res1 = await sendEmail(KEY, internal);
+    // Both emails go together rather than one after the other, so the enquirer's
+    // answer is not held up by a second round trip to Resend. The internal email
+    // is the one that must succeed; the customer acknowledgement is best-effort —
+    // don't fail the request if it bounces.
+    const [res1, ackOk] = await Promise.all([
+      sendEmail(KEY, internal),
+      sendEmail(KEY, customer).then(function (r) { return r.ok; }, function () { return false; })
+    ]);
     if (!res1.ok) {
       return { statusCode: 502, headers, body: JSON.stringify({ error: 'Send failed', detail: res1.data }) };
     }
-    // Customer acknowledgement is best-effort — don't fail the request if it bounces.
-    let ackOk = false;
-    try { const res2 = await sendEmail(KEY, customer); ackOk = res2.ok; } catch (_) { ackOk = false; }
     const available = (!pen || pen.error || pen.possible == null) ? 'unknown' : (pen.possible ? 'available' : 'unavailable');
     // Nearby dates reach the enquirer only when their own dates are full: dates
     // and nothing else \u2014 no pens, no moves, no reasons.
