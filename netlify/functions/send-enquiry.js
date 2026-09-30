@@ -56,7 +56,7 @@ const PLUM = '#9b4880';
 const INK = '#46474a';
 // As in CatBooker's Settings: the footer address customers see on every email.
 const CO_NAME = 'Apple Blossom Cattery';
-const CO_ADDRESS = 'Cowbridge Road, Ystradowen, Vale of Glamorgan, CF72 9JU';
+const CO_ADDRESS = 'Cowbridge Road, Talygarn, Vale of Glamorgan, CF72 9JU';
 const CO_PHONE = '07855 475851';
 
 function footer() {
