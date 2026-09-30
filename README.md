@@ -99,7 +99,7 @@ at the Netlify site.
 | Variable | Required | Default | Purpose |
 |---|---|---|---|
 | `RESEND_API_KEY` | **Yes** | — | Resend API key (same account as CatBooker is fine). |
-| `MAIL_FROM` | No | `Apple Blossom Cattery <enquiries@appleblossomcatterybookings.com>` | Sender. **Must be on a domain VERIFIED in Resend.** `appleblossomcattery.com` could not be verified (Wix blocked the MX transfer), so `appleblossomcatterybookings.com` is the verified sending domain. |
+| `MAIL_FROM` | No | `Apple Blossom Cattery <bookings@appleblossomcattery.com>` | Sender. **Must be on a domain VERIFIED in Resend.** `appleblossomcattery.com` is verified (30 Sep 2026) with Resend's CNAME records (`rsend`, `send`) and the `resend._domainkey` TXT in Wix DNS; Wix does not publish MX records on subdomains, so never use Resend's MX-based setup. Until then mail went from the lookalike `appleblossomcatterybookings.com`, and much of it landed in junk. |
 | `MAIL_TO` | No | `laura@appleblossomcattery.com` | Where enquiries land. |
 | `MAIL_CC` | No | `bookings@appleblossomcattery.com` | Copied on every enquiry. |
 | `CATBOOKER_API_URL` | For live check | — | CatBooker Pen Checker endpoint, e.g. `https://catbooker.netlify.app/api/pen-check`. When set, the site does a live check; when unset it uses the built-in mock. |

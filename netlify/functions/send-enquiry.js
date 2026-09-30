@@ -10,12 +10,15 @@
 //
 // Requires Node 18+ (Netlify default) for the global fetch().
 
-// The "from" address MUST be on a domain VERIFIED in Resend. Wix blocked the
-// MX transfer for appleblossomcattery.com, so appleblossomcatterybookings.com
-// is the verified sending domain. Recipients (below) can be on any domain —
-// only the sender's domain needs verifying. All three are env-overridable so
-// you can change addresses without touching code.
-const FROM = process.env.MAIL_FROM || 'Apple Blossom Cattery <enquiries@appleblossomcatterybookings.com>';
+// The "from" address MUST be on a domain VERIFIED in Resend. Until 30 Sep 2026
+// that was appleblossomcatterybookings.com: Wix will not publish an MX record on
+// a subdomain, which Resend's original setup needed. Customers saw a lookalike
+// domain and much of the mail went to junk. appleblossomcattery.com itself is
+// now verified with Resend's CNAME-based records, which Wix does support, so
+// mail comes from the name customers know. Recipients (below) can be on any
+// domain — only the sender's domain needs verifying. All three are
+// env-overridable so you can change addresses without touching code.
+const FROM = process.env.MAIL_FROM || 'Apple Blossom Cattery <bookings@appleblossomcattery.com>';
 const TO_OWNER = process.env.MAIL_TO || 'laura@appleblossomcattery.com';
 const CC_OWNER = process.env.MAIL_CC || 'bookings@appleblossomcattery.com';
 
