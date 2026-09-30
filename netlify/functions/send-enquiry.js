@@ -110,7 +110,7 @@ async function sendEmail(key, payload) {
 // arriving and the Enquiries page silently stopped filling up. Only the secret
 // is genuinely secret; the address can safely have a default.
 const PEN_CHECK_URL = 'https://catbooker.netlify.app/api/pen-check';
-const PEN_CHECK_WAIT_MS = 7500;
+const PEN_CHECK_WAIT_MS = 8500;
 
 async function penCheck(input) {
   const url = process.env.CATBOOKER_API_URL || PEN_CHECK_URL;
@@ -120,11 +120,12 @@ async function penCheck(input) {
   // a full house had space. It only ever comes from CatBooker; if we cannot
   // reach it we say so. But we DO still try, using the default address.
   if (!secret) return { possible: null, error: true, why: 'PEN_CHECK_SECRET is not set on this deploy' };
-  // Wait at most 7.5 s. CatBooker now answers within 4 s of starting (its own
-  // time budget), so the rest is headroom for cold starts and the network: at 6 s
-  // a 2-move enquiry on 30 Sep 2026 ran out and the enquirer saw "enquiry
-  // received" with no answer. This function has a 10 s limit and must still send
-  // two emails (sent together, below); the form's own mailto fallback is at 15 s.
+  // Wait at most 8.5 s (owner, 30 Sep 2026). CatBooker now answers within 4 s of
+  // starting (its own time budget), so the rest is headroom for cold starts and
+  // the network: at 6 s a 2-move enquiry on 30 Sep 2026 ran out and the enquirer
+  // saw "enquiry received" with no answer. This function has a 10 s limit and must
+  // still send two emails (sent together, below, ~0.5 s), so do not raise this
+  // further; the form's own mailto fallback is at 15 s.
   // A slow answer is treated as "unknown" (the enquiry is still recorded by
   // CatBooker, which carries on after we stop waiting) — never as unavailable.
   const ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
