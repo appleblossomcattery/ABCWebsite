@@ -38,61 +38,74 @@ const nameCase = (s) => String(s == null ? '' : s)
   .replace(/\s+/g, ' ')
   .trim();
 
-// Five-petal blossom mark (Apple Mail / iOS render it; Gmail drops <svg>
-// cleanly with no broken-image icon, so it degrades safely).
-const blossom = (size) =>
-  '<svg width="' + size + '" height="' + size + '" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" role="presentation" style="display:block">' +
-  '<g fill="#CE6D9E"><circle cx="24" cy="11" r="8.5"/><circle cx="37.4" cy="20.7" r="8.5"/><circle cx="32.3" cy="36.5" r="8.5"/><circle cx="15.7" cy="36.5" r="8.5"/><circle cx="10.6" cy="20.7" r="8.5"/></g>' +
-  '<circle cx="24" cy="24" r="6.5" fill="#9B4880"/></svg>';
+// The email design is CatBooker's (owner, 30 Sep 2026): the multi-shaded
+// Apple Blossom logo, blush page, white card, Quicksand text and
+// the "Loved like our own" footer, so a website enquiry reads as the same
+// cattery as every booking email that follows. Mirrors CatBooker's
+// src/lib/emailFrame.ts; change the two together.
+const LOGO_URL = 'https://catbooker.appleblossomcattery.com/email-logo.jpg';
+const TAGLINE_URL = 'https://catbooker.appleblossomcattery.com/tagline-script.png';
+const FONTS_CSS = "@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Quicksand:wght@500;600;700&display=swap');";
+// The site's own fine, rounded Quicksand, at 500 so small text stays readable.
+// Gmail and Outlook ignore web fonts: the stack then falls back to fine system
+// faces (Avenir Next on Apple, Segoe UI on Windows), never a heavy default.
+const BODY_FONT = "'Quicksand','Avenir Next','Avenir','Segoe UI','Helvetica Neue',Arial,sans-serif";
+const HEAD_FONT = BODY_FONT;
+const SCRIPT_FONT = "'Dancing Script','Snell Roundhand','Brush Script MT',cursive";
+const PLUM = '#9b4880';
+const INK = '#46474a';
+// As in CatBooker's Settings: the footer address customers see on every email.
+const CO_NAME = 'Apple Blossom Cattery';
+const CO_ADDRESS = 'Cowbridge Road, Ystradowen, Vale of Glamorgan, CF72 9JU';
+const CO_PHONE = '07855 475851';
 
-const HEAD_FONT = "Quicksand,'Trebuchet MS','Segoe UI',Arial,sans-serif";
-const BODY_FONT = "'Nunito Sans','Helvetica Neue',Arial,sans-serif";
+function footer() {
+  return '<div style="text-align:center;margin-top:20px">' +
+    '<div style="margin:0 auto 10px;line-height:1">' +
+      '<span style="display:inline-block;vertical-align:middle;width:52px;height:1px;background:#e7dae1"></span>' +
+      '<span style="display:inline-block;vertical-align:middle;color:#cf9dbd;font-size:14px;padding:0 10px">&#10048;</span>' +
+      '<span style="display:inline-block;vertical-align:middle;width:52px;height:1px;background:#e7dae1"></span>' +
+    '</div>' +
+    '<div style="margin-bottom:5px"><img src="' + TAGLINE_URL + '" alt="Loved like our own" width="190" height="21" style="display:inline-block;width:190px;max-width:70%;height:auto;border:0"></div>' +
+    '<div style="font-family:' + HEAD_FONT + ';font-weight:700;font-size:13.5px;color:' + PLUM + ';letter-spacing:.02em">' + CO_NAME + '</div>' +
+    '<div style="color:#8a7f86;font-size:12px;line-height:1.8;margin-top:3px">' +
+      '<a style="color:#8a7f86;text-decoration:none">' + CO_ADDRESS + '</a><br>' +
+      '<a href="tel:+447855475851" style="color:#8a7f86;text-decoration:none">' + CO_PHONE + '</a>' +
+      '<span style="color:#cbbfc6">&nbsp;&middot;&nbsp;</span>' +
+      '<a href="https://www.appleblossomcattery.com" style="color:' + PLUM + ';text-decoration:none;font-weight:600">appleblossomcattery.com</a>' +
+    '</div>' +
+    '<div style="margin-top:12px;color:#c4b8bf;font-size:10.5px">Powered by <span style="font-family:' + SCRIPT_FONT + ';font-weight:700;font-size:14px;color:#b394a6">CatBooker</span></div>' +
+  '</div>';
+}
 
-// Branded email shell (table-based, inline styles = email-safe).
+// Branded email shell: CatBooker's frame (inline styles = email-safe).
 function shell(preheader, bodyHtml) {
-  return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">' +
-    '<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>' +
-    '<body style="margin:0;padding:0;background:#F5F1EC;-webkit-text-size-adjust:100%">' +
-    '<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#F5F1EC">' + esc(preheader) + '</div>' +
-    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F1EC;padding:30px 12px">' +
-      '<tr><td align="center">' +
-        '<table role="presentation" width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;background:#ffffff;border:1px solid #ECE0E7;border-radius:22px;overflow:hidden">' +
-          // header
-          '<tr><td style="background:#FBEEF4;padding:24px 34px;border-bottom:1px solid #F0D8E4">' +
-            '<table role="presentation" cellpadding="0" cellspacing="0"><tr>' +
-              '<td style="padding-right:13px;vertical-align:middle">' + blossom(36) + '</td>' +
-              '<td style="vertical-align:middle">' +
-                '<div style="font-family:' + HEAD_FONT + ';font-weight:700;font-size:23px;color:#9B4880;line-height:1">Apple Blossom</div>' +
-                '<div style="font-family:' + HEAD_FONT + ';font-size:11px;font-weight:600;letter-spacing:.34em;color:#7C7D81;margin-top:4px">CATTERY</div>' +
-              '</td>' +
-            '</tr></table>' +
-          '</td></tr>' +
-          // body
-          '<tr><td style="padding:34px 36px 10px;font-family:' + BODY_FONT + ';color:#46474A;font-size:15.5px;line-height:1.7">' + bodyHtml + '</td></tr>' +
-          // footer
-          '<tr><td style="padding:22px 36px 30px;border-top:1px solid #F0EAEF;font-family:' + BODY_FONT + ';color:#9a93a0;font-size:12.5px;line-height:1.7">' +
-            '<span style="color:#7C7D81;font-weight:700">Apple Blossom Cattery</span><br>' +
-            'Cowbridge Road, Talygarn, Pontyclun, CF72 9JU<br>' +
-            '<a href="tel:07855475851" style="color:#9B4880;text-decoration:none">07855 475851</a> &nbsp;·&nbsp; ' +
-            '<a href="mailto:laura@appleblossomcattery.com" style="color:#9B4880;text-decoration:none">laura@appleblossomcattery.com</a>' +
-          '</td></tr>' +
-        '</table>' +
-        '<div style="font-family:' + BODY_FONT + ';color:#c0b8c4;font-size:11px;margin-top:14px;letter-spacing:.02em">Loved like our own.</div>' +
-      '</td></tr>' +
-    '</table></body></html>';
+  return '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">' +
+    '<style>' + FONTS_CSS + '</style></head>' +
+    '<body style="margin:0;padding:0;background:#f5edf0;font-family:' + BODY_FONT + ';font-weight:500;color:' + INK + ';-webkit-text-size-adjust:100%">' +
+    '<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#f5edf0">' + esc(preheader) + '</div>' +
+    // Font on the wrapper too: Gmail drops <body> styles.
+    '<div style="max-width:560px;margin:0 auto;padding:26px 20px;font-family:' + BODY_FONT + ';font-weight:500;color:' + INK + '">' +
+      '<div style="text-align:center;margin:2px 0 16px">' +
+        '<img src="' + LOGO_URL + '" alt="' + CO_NAME + '" width="210" style="width:210px;max-width:62%;height:auto;border:0;display:inline-block">' +
+      '</div>' +
+      '<div style="background:#ffffff;border:1px solid #efe3ea;border-radius:18px;padding:26px 24px;font-size:14.5px;line-height:1.6">' + bodyHtml + '</div>' +
+      footer() +
+    '</div></body></html>';
 }
 
 function detailsTable(rows) {
   const body = rows.map((r) =>
-    '<tr><td style="padding:7px 18px 7px 0;color:#7C7D81;font-weight:700;white-space:nowrap;vertical-align:top;font-size:13px;letter-spacing:.02em">' +
-    esc(r[0]) + '</td><td style="padding:7px 0;color:#46474A;font-size:15px">' + esc(r[1]) + '</td></tr>'
+    '<tr><td style="padding:7px 18px 7px 0;color:#8a7f86;font-weight:600;white-space:nowrap;vertical-align:top;font-size:13px;letter-spacing:.02em">' +
+    esc(r[0]) + '</td><td style="padding:7px 0;color:#46474a;font-size:14.5px">' + esc(r[1]) + '</td></tr>'
   ).join('');
   return '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%">' + body + '</table>';
 }
 
 function messageBlock(msg) {
-  return '<div style="font-family:' + HEAD_FONT + ';font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7C7D81;margin:20px 0 7px">Message</div>' +
-    '<div style="background:#FBEEF4;border:1px solid #F0D8E4;border-radius:14px;padding:15px 17px;font-size:15px;line-height:1.65;white-space:pre-wrap;color:#46474A">' +
+  return '<div style="font-family:' + HEAD_FONT + ';font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a7f86;margin:20px 0 7px">Message</div>' +
+    '<div style="background:#fbf6f9;border:1px solid #efe3ea;border-radius:12px;padding:14px 16px;font-size:14.5px;line-height:1.6;white-space:pre-wrap;color:#46474a">' +
     esc(msg || '(none)') + '</div>';
 }
 
@@ -229,11 +242,11 @@ function penCheckBlock(r) {
     }).join(' \u00b7 ') + (r.possible ? '' : '. The enquirer has been shown these dates (without the moves).') + '</div>';
   }
   if (!r.error && r.possible === false) {
-    detail += '<div style="margin-top:8px;color:#7C7D81">For a deeper answer \u2014 including whether an existing booking could be split to make room \u2014 run these dates through CatBooker\u2019s Pen checker. That advice is for the cattery only.</div>';
+    detail += '<div style="margin-top:8px;color:#8a7f86">For a deeper answer \u2014 including whether an existing booking could be split to make room \u2014 run these dates through CatBooker\u2019s Pen checker. That advice is for the cattery only.</div>';
   }
   return '<div style="margin-top:20px;background:' + bg + ';border:1px solid ' + border + ';border-radius:14px;padding:14px 16px">' +
     '<div style="font-family:' + HEAD_FONT + ';font-weight:700;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:' + color + ';margin-bottom:6px">' + head + '</div>' +
-    '<div style="font-size:14px;line-height:1.6;color:#46474A">' + detail + '</div></div>';
+    '<div style="font-size:14px;line-height:1.6;color:#46474a">' + detail + '</div></div>';
 }
 
 exports.handler = async (event) => {
@@ -312,12 +325,12 @@ exports.handler = async (event) => {
 
   // 1) Internal enquiry to the cattery
   const internalBody =
-    '<div style="font-family:' + HEAD_FONT + ';font-weight:700;font-size:21px;color:#46474A;margin:0 0 4px">New booking enquiry</div>' +
-    '<p style="margin:0 0 20px;color:#7C7D81;font-size:14px">Sent from the website by <span style="color:#9B4880;font-weight:700">' + esc(name) + '</span>.</p>' +
+    '<div style="font-family:' + HEAD_FONT + ';font-weight:600;font-size:20px;color:#9b4880;margin:0 0 4px">New booking enquiry</div>' +
+    '<p style="margin:0 0 20px;color:#8a7f86;font-size:14px">Sent from the website by <span style="color:#9b4880;font-weight:700">' + esc(name) + '</span>.</p>' +
     detailsTable(rows) +
     messageBlock(f.message) +
     penCheckBlock(pen) +
-    '<p style="margin:22px 0 6px;font-size:13.5px;color:#9a93a0">Reply to this email to respond to ' + esc(first) + ' directly.</p>';
+    '<p style="margin:22px 0 6px;font-size:13.5px;color:#8a7f86">Reply to this email to respond to ' + esc(first) + ' directly.</p>';
 
   const internal = {
     from: FROM,
@@ -335,16 +348,16 @@ exports.handler = async (event) => {
     ['Cats', cats || '(not specified)']
   ];
   const customerBody =
-    '<div style="font-family:' + HEAD_FONT + ';font-weight:700;font-size:22px;color:#46474A;margin:0 0 14px">Thank you for your enquiry</div>' +
+    '<div style="font-family:' + HEAD_FONT + ';font-weight:600;font-size:20px;color:#9b4880;margin:0 0 14px">Thank you for your enquiry</div>' +
     '<p style="margin:0 0 15px">Dear ' + esc(first) + ',</p>' +
     '<p style="margin:0 0 15px">Thank you so much for getting in touch with Apple Blossom Cattery. We\u2019ve received your enquiry and one of us will be in touch personally &mdash; usually within a day &mdash; to confirm availability and answer any questions you may have.</p>' +
     '<p style="margin:0 0 10px">Here\u2019s a copy of what you sent us:</p>' +
     detailsTable(custRows) +
     (f.message ? messageBlock(f.message) : '') +
-    '<p style="margin:20px 0 15px">In the meantime, if you\u2019d like to talk anything through, you can call, text or WhatsApp us on <a href="tel:07855475851" style="color:#9B4880;text-decoration:none;font-weight:700">07855 475851</a>, or simply reply to this email.</p>' +
+    '<p style="margin:20px 0 15px">In the meantime, if you\u2019d like to talk anything through, you can call, text or WhatsApp us on <a href="tel:07855475851" style="color:#9b4880;text-decoration:none;font-weight:700">07855 475851</a>, or simply reply to this email.</p>' +
     '<p style="margin:0 0 4px">We can\u2019t wait to meet your cat' + (String(cats).trim() === '1' ? '' : 's') + '.</p>' +
-    '<p style="margin:14px 0 2px;font-family:' + HEAD_FONT + ';color:#9B4880;font-weight:700;font-size:17px">With warm wishes,</p>' +
-    '<p style="margin:0;color:#46474A">Laura and the team at Apple Blossom Cattery</p>';
+    '<p style="margin:14px 0 2px;font-family:' + HEAD_FONT + ';color:#9b4880;font-weight:700;font-size:17px">With warm wishes,</p>' +
+    '<p style="margin:0;color:#46474a">Laura and the team at Apple Blossom Cattery</p>';
 
   const customer = {
     from: FROM,
