@@ -46,6 +46,7 @@ const http = require('http');
 const crypto = require('crypto');
 const puppeteer = require('puppeteer');
 const sharp = require('sharp');
+const zlib = require('zlib');
 const mammoth = require('mammoth');
 const { injectSeoHead } = require('./postbuild');
 const { BASE_URL, ROUTES } = require('./routes');
@@ -254,7 +255,11 @@ function stripEmDashes(html) {
   return html;
 }
 
-function externalizeBundle(html) {
+// First-paint material collected while externalising, used by assemble():
+// the app's own CSS (font faces pointed at real files) and the fonts to preload.
+const FIRST_PAINT = { css: '', preloads: [] };
+
+async function externalizeBundle(html) {
   const mMatch = html.match(/<script type="__bundler\/manifest">([\s\S]*?)<\/script>/);
   const tMatch = html.match(/<script type="__bundler\/template">([\s\S]*?)<\/script>/);
   const bootRe = /const manifestEl = document\.querySelector\('script\[type="__bundler\/manifest"\]'\);\s*const templateEl = document\.querySelector\('script\[type="__bundler\/template"\]'\);\s*if \(!manifestEl \|\| !templateEl\) \{[\s\S]*?\n\s*\}\s*const manifest = JSON\.parse\(manifestEl\.textContent\);\s*let template = JSON\.parse\(templateEl\.textContent\);/;
@@ -265,17 +270,83 @@ function externalizeBundle(html) {
   const assetsDir = path.join(DIST, 'assets');
   fs.mkdirSync(assetsDir, { recursive: true });
   const h10 = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 10);
-  const mName = `app-manifest-${h10(mMatch[1])}.json`;
-  const tName = `app-template-${h10(tMatch[1])}.json`;
-  fs.writeFileSync(path.join(assetsDir, mName), mMatch[1]);
-  fs.writeFileSync(path.join(assetsDir, tName), tMatch[1]);
+
+  // ---- images and fonts out of the manifest (1 Oct 2026) -------------------
+  // The manifest carried every image and font as base64 text: 1.6 MB to
+  // download and decode before the page could draw properly, on every first
+  // visit. They are now ordinary content-hashed files under /assets/ (images
+  // re-encoded as WebP, at most 1600px), which the browser fetches as it needs
+  // them and caches for good. The manifest keeps only the scripts. The
+  // bootstrap is patched to take an entry's `url` as-is; if that anchor ever
+  // moves, the manifest is left exactly as the design tool wrote it.
+  let manifestJson = mMatch[1];
+  let templateJson = tMatch[1];
+  const entryRe = /const entry = manifest\[uuid\];\s*try \{/;
+  const urlOf = {};
+  try {
+    const manifest = JSON.parse(mMatch[1]);
+    if (!entryRe.test(html)) throw new Error('bootstrap entry anchor not found');
+    let imgBefore = 0, imgAfter = 0, nImg = 0, nFont = 0;
+    for (const [uuid, e] of Object.entries(manifest)) {
+      if (!e || typeof e.data !== 'string' || !/^(image|font)\//.test(e.mime || '')) continue;
+      let buf = Buffer.from(e.data, 'base64');
+      if (e.compressed) buf = zlib.gunzipSync(buf);
+      let ext, out = buf;
+      if (/^image\/(jpeg|png)$/.test(e.mime)) {
+        const webp = await sharp(buf).rotate().resize(1600, 1600, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 78 }).toBuffer();
+        if (webp.length < buf.length) { out = webp; ext = 'webp'; } else ext = e.mime === 'image/png' ? 'png' : 'jpg';
+        imgBefore += buf.length; imgAfter += out.length; nImg++;
+      } else if (e.mime.startsWith('image/')) {
+        ext = e.mime === 'image/svg+xml' ? 'svg' : e.mime.split('/')[1]; nImg++;
+      } else { ext = e.mime === 'font/woff2' ? 'woff2' : e.mime.split('/')[1]; nFont++; }
+      const name = `${h10(out)}.${ext}`;
+      fs.writeFileSync(path.join(assetsDir, name), out);
+      urlOf[uuid] = `/assets/${name}`;
+      manifest[uuid] = { mime: ext === 'webp' ? 'image/webp' : e.mime, url: urlOf[uuid] };
+    }
+    html = html.replace(entryRe, (m) => `${m}\n        if (entry.url) { blobUrls[uuid] = entry.url; return; }`);
+    manifestJson = JSON.stringify(manifest);
+    console.log(`  assets: ${nImg} images (${(imgBefore / 1024).toFixed(0)}KB → ${(imgAfter / 1024).toFixed(0)}KB as WebP) and ${nFont} fonts written to /assets/ as real files`);
+
+    // The app's CSS for the first paint, and two tweaks inside the app itself.
+    let template = JSON.parse(tMatch[1]);
+    let css = [...template.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n');
+    for (const [uuid, url] of Object.entries(urlOf)) css = css.split(uuid).join(url);
+    FIRST_PAINT.css = css;
+    // Preload the Latin cut of each family drawn above the fold.
+    for (const fam of ['Nunito Sans', 'Quicksand']) {
+      const m = template.match(new RegExp(`/\\* latin \\*/\\s*@font-face\\s*\\{[^}]*font-family:\\s*'${fam}'[^}]*url\\("([^"]+)"\\)`));
+      if (m && urlOf[m[1]] && !FIRST_PAINT.preloads.includes(urlOf[m[1]])) FIRST_PAINT.preloads.push(urlOf[m[1]]);
+    }
+    // Sections fade up as they scroll into view (.abc-reveal). On the very
+    // first load the pre-rendered page is already showing them, so the swap to
+    // the live app must not blank them and fade them in again: while <html> has
+    // the class abc-first (set and cleared by the persist script) they simply
+    // stay visible.
+    const revealRule = '.abc-reveal{opacity:0}';
+    if (template.includes(revealRule)) {
+      template = template.replace(revealRule, `${revealRule}html.abc-first .abc-reveal{opacity:1!important;animation:none!important;transform:none!important}`);
+    } else console.warn('  first paint: .abc-reveal rule not found in the template — sections will fade in again after load');
+    // Below-the-fold pictures wait until they are needed.
+    template = template.replace(/<img(?![^>]*\bloading=)/g, '<img loading="lazy" decoding="async"');
+    templateJson = JSON.stringify(template).replace(/<\//g, '<\\/');
+  } catch (err) {
+    console.warn('  assets: left inside the manifest (' + err.message + ') — heavier first load, but correct');
+    manifestJson = mMatch[1]; templateJson = tMatch[1];
+    FIRST_PAINT.css = ''; FIRST_PAINT.preloads = [];
+  }
+
+  const mName = `app-manifest-${h10(manifestJson)}.json`;
+  const tName = `app-template-${h10(templateJson)}.json`;
+  fs.writeFileSync(path.join(assetsDir, mName), manifestJson);
+  fs.writeFileSync(path.join(assetsDir, tName), templateJson);
   html = html.replace(mMatch[0], '').replace(tMatch[0], '');
   html = html.replace(bootRe, () =>
     `let [manifest, template] = await Promise.all([
       fetch('/assets/${mName}').then((r) => { if (!r.ok) throw new Error('manifest fetch ' + r.status); return r.json(); }),
       fetch('/assets/${tName}').then((r) => { if (!r.ok) throw new Error('template fetch ' + r.status); return r.json(); }),
     ]);`);
-  console.log(`  bundle: manifest+template externalised to /assets/ (${(mMatch[1].length / 1048576).toFixed(1)}MB + ${(tMatch[1].length / 1024).toFixed(0)}KB, content-hashed, cached immutable)`);
+  console.log(`  bundle: manifest+template externalised to /assets/ (${(manifestJson.length / 1024).toFixed(0)}KB + ${(templateJson.length / 1024).toFixed(0)}KB, content-hashed, cached immutable)`);
   return html;
 }
 
@@ -342,6 +413,26 @@ function persistScript() {
   // Belt-and-braces for the hydration window on slower devices.
   var n=0,iv=setInterval(function(){apply();if(++n>25)clearInterval(iv);},200);
   apply();
+  // First load only: the pre-rendered page is already showing the sections the
+  // app fades in on scroll. When the app swaps in, hold them visible (class
+  // abc-first on <html>, see the template CSS) instead of blanking and fading
+  // them a second time; once the app has marked what is on screen, settle those
+  // exactly as its own animationend handler would, and hand back to the app so
+  // sections further down still fade in as the visitor scrolls.
+  var held=false;
+  function hold(){try{
+    if(held||!document.documentElement||document.getElementById('abc-prerender'))return;
+    held=true;var de=document.documentElement;de.classList.add('abc-first');
+    var t=0,settle=function(){try{
+      var els=document.querySelectorAll('.abc-reveal.abc-in');
+      for(var i=0;i<els.length;i++){els[i].classList.remove('abc-reveal','abc-in');els[i].style.opacity='1';els[i].style.animationDelay='';}
+      de.classList.remove('abc-first');
+    }catch(e){}};
+    var w=setInterval(function(){t+=150;
+      if(document.querySelector('#dc-root .abc-reveal')||t>9000){clearInterval(w);setTimeout(settle,1900);}
+    },150);
+  }catch(e){}}
+  try{new MutationObserver(hold).observe(document,{childList:true});}catch(e){}
 })();</script>`;
 }
 
@@ -391,7 +482,41 @@ function assemble(base, r, dcRootHtml) {
     : `<script>if(!location.hash)location.hash=${JSON.stringify(r.hash)};</script>\n`;
   const seoMarkup = `<div id="abc-prerender">${dcRootHtml}</div>`;
   html = html.replace(/<body([^>]*)>/i, (m) => `${m}\n${boot}${seoMarkup}`);
-  return html;
+  return firstPaint(html);
+}
+
+// ---- first paint ----------------------------------------------------------
+// The pre-rendered page used to draw inside the bundle's loading shell: body a
+// centred flexbox in the system font, every margin zeroed, pictures blank. A
+// second or two later the app arrived and redrew everything in the right fonts
+// and layout (a layout shift of 0.46 on a phone, 1 Oct 2026). The first paint
+// now uses the app's own CSS, its real fonts (two preloaded) and the real
+// pictures, so the swap to the live app changes nothing the visitor can see.
+// Fail-safe: with no CSS collected, or the shell's rules not found, the page is
+// left as it was.
+function firstPaint(html) {
+  if (!FIRST_PAINT.css) return html;
+  const shellReset = /\*\s*\{\s*margin:\s*0;\s*padding:\s*0;\s*box-sizing:\s*border-box;\s*\}/;
+  const shellBody = /body\s*\{\s*background:\s*#faf9f5;\s*display:\s*flex;[^}]*\}/;
+  const headEnd = html.search(/<\/head>/i);
+  if (headEnd === -1) return html;
+  let head = html.slice(0, headEnd);
+  if (!shellReset.test(head) || !shellBody.test(head)) {
+    console.warn('  first paint: loading-shell CSS not found — first paint left as it was');
+    return html;
+  }
+  head = head.replace(shellReset, '').replace(shellBody, '');
+  // The shell's "This page requires JavaScript to display" note is no longer
+  // true: the pre-rendered page is complete without scripts.
+  const noJsNote = /<div[^>]*>\s*This page requires JavaScript to display\.\s*<\/div>/i;
+  head = head.replace(noJsNote, '');
+  const rest = html.slice(headEnd).replace(noJsNote, '');
+  const preloads = FIRST_PAINT.preloads.map((u) => `<link rel="preload" as="font" type="font/woff2" href="${u}" crossorigin>`).join('\n');
+  const css = FIRST_PAINT.css
+    + '\n#abc-prerender .abc-reveal{opacity:1!important;animation:none!important;transform:none!important}'
+    // The shell's status pill: the page is already fully drawn.
+    + '\n#__bundler_loading{display:none!important}';
+  return head + `${preloads}\n<style id="abc-first-paint">${css.replace(/<\//g, '<\\/')}</style>\n` + rest;
 }
 
 // Lift the rendered content and rewrite in-page hash nav to real paths.
@@ -404,6 +529,14 @@ function cleanDcRoot(rawHtml) {
   h = h.replace(/blob:[^"')\s]+/g, '');
   // Defensive: self-host any wixstatic URL that reached the rendered markup.
   h = migrateImages(h);
+  // The first picture is the one on screen: fetch it first. The rest wait
+  // until the visitor scrolls near them. (The live app's own <img> tags are
+  // already lazy; the capture carries that attribute, so normalise here.)
+  let n = 0;
+  h = h.replace(/<img\b([^>]*)>/g, (m, attrs) => {
+    const a = attrs.replace(/\s(?:loading|decoding|fetchpriority)="[^"]*"/g, '');
+    return n++ === 0 ? `<img fetchpriority="high" decoding="async"${a}>` : `<img loading="lazy" decoding="async"${a}>`;
+  });
   return h;
 }
 
@@ -722,7 +855,7 @@ async function main() {
   buildAreaPages();
   base = await buildGallery(base);
   base = stripEmDashes(base);
-  base = externalizeBundle(base);
+  base = await externalizeBundle(base);
   fs.writeFileSync(path.join(DIST, 'index.html'), base);
 
   const server = http.createServer((req, res) => {
