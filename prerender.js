@@ -556,7 +556,7 @@ async function main() {
     if (before > 0) {
       base = base.replace(iconLinks, (_m, rel) =>
         rel === 'icon'
-          ? '<link rel=\\"icon\\" href=\\"/favicon.ico\\" sizes=\\"any\\">'
+          ? '<link rel=\\"icon\\" href=\\"/favicon.ico\\" sizes=\\"any\\"><link rel=\\"icon\\" type=\\"image/png\\" sizes=\\"192x192\\" href=\\"/icon-192.png\\">'
           : '<link rel=\\"apple-touch-icon\\" href=\\"/apple-touch-icon.png\\">');
       console.log(`  icons: ${before} inline data: URI favicon link(s) repointed at the published files`);
     } else {
@@ -710,6 +710,7 @@ async function main() {
   copyIfExists('favicon.ico');
   copyIfExists('apple-touch-icon.png');
   copyIfExists('icon-512.png');
+  copyIfExists('icon-192.png');
   // Publish only the PDF from documents/ — the .docx is the private working
   // master (it feeds the generated /policies/ page, but is not itself served).
   fs.mkdirSync(path.join(DIST, 'documents'), { recursive: true });
@@ -986,6 +987,9 @@ async function buildPoliciesPage() {
 <title>Policies &amp; Procedures - Apple Blossom Cattery</title>
 <meta name="description" content="The full operations manual for Apple Blossom Cattery: booking in, feeding, cleaning, medication, supervision, risk assessment and privacy: everything we do with your cat, written down and published.">
 <link rel="canonical" href="${BASE_URL}/policies/">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta property="og:title" content="Policies &amp; Procedures - Apple Blossom Cattery">
 <meta property="og:description" content="Everything we do with your cat, written down. Our full operations manual, published.">
 <meta property="og:url" content="${BASE_URL}/policies/">
@@ -1192,6 +1196,7 @@ function areaPageHtml(a) {
 <link rel="canonical" href="${url}">
 <meta name="theme-color" content="#9B4880">
 <link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Apple Blossom Cattery">
