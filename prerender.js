@@ -1075,6 +1075,8 @@ const AREA_CSS = `
   section { background:#fff; border:1px solid #ECE0E7; border-radius:22px; padding:clamp(22px,4vw,38px); margin-top:22px; }
   section h2 { font-family:'Quicksand',sans-serif; font-weight:700; font-size:24px; color:#7C3A66; margin-bottom:14px; }
   section p { font-size:16px; line-height:1.75; margin:0 0 14px; }
+  section h3 { font-family:'Quicksand',sans-serif; font-weight:700; font-size:17px; color:#46474A; margin:18px 0 6px; }
+  section h2 + h3 { margin-top:0; }
   section p:last-child { margin-bottom:0; }
   .places { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
   .places span { background:#FBEEF4; color:#7C3A66; border-radius:999px; padding:6px 13px; font-size:14px; font-weight:600; }
@@ -1152,6 +1154,7 @@ function areaPageHtml(a) {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: 'Apple Blossom Cattery',
+    alternateName: 'Appleblossom Cattery',
     description: a.description,
     url,
     telephone: FACTS.phone,
@@ -1241,7 +1244,12 @@ function areaPageHtml(a) {
     ${a.angle.paras.map((p) => `<p>${escH(p)}</p>`).join('\n    ')}
   </section>
 
-  <section>
+${a.faq && a.faq.length ? `  <section>
+    <h2>Questions from ${escH(a.name)} owners</h2>
+    ${a.faq.map((f) => `<h3>${escH(f.q)}</h3>\n    <p>${escH(f.a)}</p>`).join('\n    ')}
+  </section>
+
+` : ''}  <section>
     <h2>The essentials</h2>
     <ul class="facts">
       <li>Licensed and inspected by the Vale of Glamorgan Animal Welfare team, Animal Boarding Licence no. ${escH(FACTS.licence)}, and fully insured.</li>

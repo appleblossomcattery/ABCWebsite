@@ -6,6 +6,11 @@
  * crawler-visible content and a distinct <title>/description/canonical, so the
  * site can rank for local searches instead of collapsing to one indexable page.
  *
+ * Titles and descriptions for /about/, /boarding/, /hours/ and /contact/ were
+ * rewritten on 1 Oct 2026: Search Console showed them on page one (positions
+ * 4-8) but clicked by under 1% of searchers, so they now lead with the
+ * reasons to click (award, 4.9★, climate control, J34, instant availability).
+ *
  * Edit titles/descriptions HERE — they flow into the pre-rendered <head>, the
  * runtime SEO-persist script (so they survive SPA hydration and client-side
  * route changes), and sitemap.xml. `hash` is the in-app route; `path` is the
@@ -30,16 +35,16 @@ const ROUTES = [
   {
     hash: '#/about',
     path: '/about/',
-    title: 'About Us - Apple Blossom Cattery, Pontyclun',
+    title: 'About Us - Family-Run Cattery since 2019 | Apple Blossom Cattery',
     description:
-      'How Apple Blossom Cattery began: a family-run, fully climate-controlled cat boarding cattery near Pontyclun in the Vale of Glamorgan, caring for cats as if they were our own since 2019.',
+      'The family behind Apple Blossom Cattery: Cattery of the Year 2026/27 (Prestige Awards), rated 4.9★ on Google, licensed and fully climate-controlled. Just off M4 Junction 34 near Pontyclun.',
   },
   {
     hash: '#/boarding',
     path: '/boarding/',
-    title: 'Cat Boarding & Pens - Apple Blossom Cattery, Pontyclun',
+    title: 'Cattery Pens: Single, Double & Family | Apple Blossom Cattery',
     description:
-      'Single, double and family cat pens, plus a calm space for timid cats. Fully climate-controlled cat boarding near Pontyclun, Cardiff and across the Vale of Glamorgan.',
+      'Climate-controlled single, double and family pens, plus a quiet space for timid cats. Award-winning cattery off M4 Junction 34 near Pontyclun, rated 4.9★ on Google. Book a viewing.',
   },
   {
     hash: '#/pickup',
@@ -58,9 +63,9 @@ const ROUTES = [
   {
     hash: '#/hours',
     path: '/hours/',
-    title: 'Opening Hours & Appointments - Apple Blossom Cattery',
+    title: 'Opening Hours & Drop-Off Times | Apple Blossom Cattery',
     description:
-      'Drop-offs, collections and viewings at Apple Blossom Cattery are by appointment, normally 10am–4pm daily, so every cat gets our full attention. Near Pontyclun, Vale of Glamorgan.',
+      'Drop-offs, collections and viewings by appointment, normally 10am–4pm, seven days a week, so every cat gets our full attention. Call or WhatsApp 07855 475851 to book a time.',
   },
   {
     hash: '#/vaccinations',
@@ -101,9 +106,9 @@ const ROUTES = [
   {
     hash: '#/contact',
     path: '/contact/',
-    title: 'Contact & Enquiry - Apple Blossom Cattery, Pontyclun',
+    title: 'Contact & Check Availability | Apple Blossom Cattery, Pontyclun',
     description:
-      'Get in touch with Apple Blossom Cattery in Talygarn, Pontyclun (CF72 9JU). Call, text or WhatsApp 07855 475851, check availability, or send a boarding enquiry.',
+      'Check your dates online in seconds, or call, text or WhatsApp 07855 475851. Award-winning, climate-controlled cattery on Cowbridge Road, Talygarn, Pontyclun CF72 9JU, off M4 J34.',
   },
   {
     hash: '#/terms',
