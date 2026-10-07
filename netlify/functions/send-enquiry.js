@@ -43,6 +43,11 @@ const nameCase = (s) => String(s == null ? '' : s)
 // the "Loved like our own" footer, so a website enquiry reads as the same
 // cattery as every booking email that follows. Mirrors CatBooker's
 // src/lib/emailFrame.ts; change the two together.
+//
+// Tables, not styled boxes (7 Oct 2026, as CatBooker): Outlook on Windows lays
+// mail out with Word, which drops box backgrounds, max-width and rounded
+// corners (and re-saves the email that way when someone replies), but keeps a
+// table cell's colour, padding and width.
 const LOGO_URL = 'https://catbooker.appleblossomcattery.com/email-logo.jpg';
 const TAGLINE_URL = 'https://catbooker.appleblossomcattery.com/tagline-script.png';
 const FONTS_CSS = "@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Quicksand:wght@500;600;700&display=swap');";
@@ -59,13 +64,13 @@ const CO_NAME = 'Apple Blossom Cattery';
 const CO_ADDRESS = 'Cowbridge Road, Talygarn, Vale of Glamorgan, CF72 9JU';
 const CO_PHONE = '07855 475851';
 
+const RULE = '<td width="52" valign="middle" style="width:52px"><div style="border-top:1px solid #e7dae1;font-size:1px;line-height:1px">&nbsp;</div></td>';
+
 function footer() {
   return '<div style="text-align:center;margin-top:20px">' +
-    '<div style="margin:0 auto 10px;line-height:1">' +
-      '<span style="display:inline-block;vertical-align:middle;width:52px;height:1px;background:#e7dae1"></span>' +
-      '<span style="display:inline-block;vertical-align:middle;color:#cf9dbd;font-size:14px;padding:0 10px">&#10048;</span>' +
-      '<span style="display:inline-block;vertical-align:middle;width:52px;height:1px;background:#e7dae1"></span>' +
-    '</div>' +
+    '<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px"><tr>' +
+      RULE + '<td valign="middle" style="color:#cf9dbd;font-size:14px;line-height:1;padding:0 10px">&#10048;</td>' + RULE +
+    '</tr></table>' +
     '<div style="margin-bottom:5px"><img src="' + TAGLINE_URL + '" alt="Loved like our own" width="190" height="21" style="display:inline-block;width:190px;max-width:70%;height:auto;border:0"></div>' +
     '<div style="font-family:' + HEAD_FONT + ';font-weight:700;font-size:13.5px;color:' + PLUM + ';letter-spacing:.02em">' + CO_NAME + '</div>' +
     '<div style="color:#8a7f86;font-size:12px;line-height:1.8;margin-top:3px">' +
@@ -82,17 +87,22 @@ function footer() {
 function shell(preheader, bodyHtml) {
   return '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">' +
-    '<style>' + FONTS_CSS + '</style></head>' +
+    '<meta name="x-apple-disable-message-reformatting"><style>' + FONTS_CSS + '</style>' +
+    "<!--[if mso]><style>body,table,td,p,div,span,a{font-family:'Segoe UI',Arial,sans-serif !important}</style><![endif]--></head>" +
     '<body style="margin:0;padding:0;background:#f5edf0;font-family:' + BODY_FONT + ';font-weight:500;color:' + INK + ';-webkit-text-size-adjust:100%">' +
     '<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#f5edf0">' + esc(preheader) + '</div>' +
-    // Font on the wrapper too: Gmail drops <body> styles.
-    '<div style="max-width:560px;margin:0 auto;padding:26px 20px;font-family:' + BODY_FONT + ';font-weight:500;color:' + INK + '">' +
-      '<div style="text-align:center;margin:2px 0 16px">' +
+    // Font on the cells too: Gmail drops <body> styles.
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f5edf0" style="background:#f5edf0;width:100%"><tr><td align="center" style="padding:26px 12px">' +
+    '<!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" align="center" style="max-width:560px;width:100%;margin:0 auto;font-family:' + BODY_FONT + ';font-weight:500;color:' + INK + '">' +
+      '<tr><td align="center" style="padding:2px 0 16px">' +
         '<img src="' + LOGO_URL + '" alt="' + CO_NAME + '" width="210" style="width:210px;max-width:62%;height:auto;border:0;display:inline-block">' +
-      '</div>' +
-      '<div style="background:#ffffff;border:1px solid #efe3ea;border-radius:18px;padding:26px 24px;font-size:14.5px;line-height:1.6">' + bodyHtml + '</div>' +
-      footer() +
-    '</div></body></html>';
+      '</td></tr>' +
+      '<tr><td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #efe3ea;border-radius:18px;padding:26px 24px;font-size:14.5px;line-height:1.6;font-family:' + BODY_FONT + ';font-weight:500;color:' + INK + '">' + bodyHtml + '</td></tr>' +
+      '<tr><td style="font-family:' + BODY_FONT + ';color:' + INK + '">' + footer() + '</td></tr>' +
+    '</table>' +
+    '<!--[if mso]></td></tr></table><![endif]-->' +
+    '</td></tr></table></body></html>';
 }
 
 function detailsTable(rows) {
@@ -105,8 +115,9 @@ function detailsTable(rows) {
 
 function messageBlock(msg) {
   return '<div style="font-family:' + HEAD_FONT + ';font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a7f86;margin:20px 0 7px">Message</div>' +
-    '<div style="background:#fbf6f9;border:1px solid #efe3ea;border-radius:12px;padding:14px 16px;font-size:14.5px;line-height:1.6;white-space:pre-wrap;color:#46474a">' +
-    esc(msg || '(none)') + '</div>';
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate"><tr>' +
+    '<td bgcolor="#fbf6f9" style="background:#fbf6f9;border:1px solid #efe3ea;border-radius:12px;padding:14px 16px;font-size:14.5px;line-height:1.6;white-space:pre-wrap;color:#46474a">' +
+    esc(msg || '(none)') + '</td></tr></table>';
 }
 
 async function sendEmail(key, payload) {
