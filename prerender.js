@@ -51,6 +51,7 @@ const mammoth = require('mammoth');
 const { injectSeoHead } = require('./postbuild');
 const { BASE_URL, ROUTES } = require('./routes');
 const { AREAS, FACTS } = require('./areas');
+const SEASONAL = require('./seasonal');
 
 const ROOT = __dirname;
 const DIST = path.join(ROOT, 'dist');
@@ -463,12 +464,53 @@ function floatingContactScript() {
 })();</script>`;
 }
 
+// ---- runtime seasonal banner ----------------------------------------------
+// A dismissible availability card (seasonal.js) for the quiet weeks. Like the
+// WhatsApp button it re-appends itself after the bundle's document swap. It
+// shows only between `from` and `until` (checked in the visitor's browser, so
+// it disappears on time without a rebuild), sits bottom left clear of the
+// WhatsApp button, and once closed stays closed for that visit. Not shown on
+// the contact page, where the visitor is already at the form.
+function seasonalBannerScript() {
+  if (!SEASONAL || !SEASONAL.enabled) return '';
+  const cfg = JSON.stringify({
+    from: SEASONAL.from, until: SEASONAL.until, h: SEASONAL.headline,
+    t: SEASONAL.text, c: SEASONAL.cta, u: SEASONAL.href,
+  }).replace(/</g, '\\u003c');
+  return `<script>(function(){
+  var C=${cfg},K='abc-season-'+C.until;
+  function today(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+  function closed(){try{return sessionStorage.getItem(K)==='1';}catch(e){return false;}}
+  function onContact(){return /^#\\/contact/.test(location.hash)||/^\\/contact\\/?$/.test(location.pathname);}
+  function ensure(){try{
+    var t=today(),el=document.getElementById('abc-season');
+    if(t<C.from||t>C.until||closed()||onContact()){if(el)el.remove();return;}
+    if(!document.body||el)return;
+    var b=document.createElement('div');b.id='abc-season';b.setAttribute('role','complementary');b.setAttribute('aria-label','Availability');
+    b.style.cssText="position:fixed;left:16px;bottom:18px;z-index:9997;max-width:320px;margin-right:88px;background:#fff;border:1px solid #efe3ea;border-left:4px solid #9B4880;border-radius:14px;box-shadow:0 10px 28px rgba(124,58,102,.18);padding:12px 36px 12px 14px;font-family:'Quicksand','Avenir Next','Segoe UI',Arial,sans-serif;color:#46474a;line-height:1.4";
+    var e=function(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+    b.innerHTML='<div style="font-weight:700;color:#9B4880;font-size:15px">'+e(C.h)+'</div>'
+      +'<div style="font-size:13.5px;font-weight:500;margin:2px 0 8px">'+e(C.t)+'</div>'
+      +'<a href="'+e(C.u)+'" style="display:inline-block;background:#9B4880;color:#fff;text-decoration:none;font-weight:700;font-size:13.5px;padding:7px 14px;border-radius:999px">'+e(C.c)+' &rarr;</a>'
+      +'<button type="button" aria-label="Close" style="position:absolute;top:6px;right:8px;border:0;background:none;color:#8a7f86;font-size:20px;line-height:1;cursor:pointer;padding:4px">&times;</button>';
+    b.querySelector('button').onclick=function(){try{sessionStorage.setItem(K,'1');}catch(x){}b.remove();};
+    b.querySelector('a').onclick=function(){try{sessionStorage.setItem(K,'1');}catch(x){}setTimeout(function(){var x=document.getElementById('abc-season');if(x)x.remove();},0);};
+    document.body.appendChild(b);
+  }catch(e){}}
+  window.addEventListener('hashchange',ensure,true);
+  window.addEventListener('load',ensure,true);
+  try{new MutationObserver(ensure).observe(document,{childList:true});}catch(e){}
+  var n=0,iv=setInterval(function(){ensure();if(++n>30)clearInterval(iv);},300);
+  ensure();
+})();</script>`;
+}
+
 // ---- per-route page assembly ----------------------------------------------
 function assemble(base, r, dcRootHtml) {
   let html = applyRouteHead(base, r);
   // Persist + floating-WhatsApp scripts go first inside <head> so they register
   // (on window) before the bundle swaps the document.
-  html = html.replace(/<head[^>]*>/i, (m) => m + '\n' + persistScript() + '\n' + floatingContactScript());
+  html = html.replace(/<head[^>]*>/i, (m) => m + '\n' + persistScript() + '\n' + floatingContactScript() + '\n' + seasonalBannerScript());
   // Remove the splash thumbnail so no-JS crawlers/users see real content, not a
   // logo. The thumbnail div holds only an <svg> (no nested div), so match up to
   // its SINGLE closing </div>. (Matching "</div></div>" over-ran to a far-away
