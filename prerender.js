@@ -484,7 +484,9 @@ function seasonalBannerScript() {
   function onContact(){return /^#\\/contact/.test(location.hash)||/^\\/contact\\/?$/.test(location.pathname);}
   function ensure(){try{
     var t=today(),el=document.getElementById('abc-season');
-    if(t<C.from||t>C.until||closed()||onContact()){if(el)el.remove();return;}
+    // Wait behind the cookie prompt (seo-head.html): it holds the same corner
+    // and sits on top, so show the card once the visitor has answered it.
+    if(t<C.from||t>C.until||closed()||onContact()||document.getElementById('abc-consent')){if(el)el.remove();return;}
     if(!document.body||el)return;
     var b=document.createElement('div');b.id='abc-season';b.setAttribute('role','complementary');b.setAttribute('aria-label','Availability');
     b.style.cssText="position:fixed;left:16px;bottom:18px;z-index:9997;max-width:320px;margin-right:88px;background:#fff;border:1px solid #efe3ea;border-left:4px solid #9B4880;border-radius:14px;box-shadow:0 10px 28px rgba(124,58,102,.18);padding:12px 36px 12px 14px;font-family:'Quicksand','Avenir Next','Segoe UI',Arial,sans-serif;color:#46474a;line-height:1.4";
@@ -501,6 +503,9 @@ function seasonalBannerScript() {
   window.addEventListener('load',ensure,true);
   try{new MutationObserver(ensure).observe(document,{childList:true});}catch(e){}
   var n=0,iv=setInterval(function(){ensure();if(++n>30)clearInterval(iv);},300);
+  // Keep checking once a second: the cookie prompt leaves without a document
+  // swap, and route changes inside the app do not always fire hashchange.
+  setInterval(ensure,1000);
   ensure();
 })();</script>`;
 }
