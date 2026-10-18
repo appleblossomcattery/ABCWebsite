@@ -73,26 +73,41 @@
   gtag('js', new Date());
   gtag('config', 'AW-18160917926');
 </script>
-<!-- Google Ads conversion: "Website enquiry" (Goals > Conversions, created
-     19 Oct 2026). Counted when the enquiry form's POST to send-enquiry comes
-     back OK. The form lives inside the design bundle, so rather than edit it we
-     watch window.fetch, which survives the bundle's document swap. Value £120 =
-     average booking (£188) x share of enquiries won (64%), CatBooker, Oct 2026. -->
+<!-- Google Ads conversions (Goals > Conversions, set up 19 Oct 2026):
+       "Website enquiry"  AW-18160917926/MU0dCOGNgaEdEKa75tND  value £120 = average
+         booking (£188) x share of enquiries won (64%), CatBooker, Oct 2026;
+       "WhatsApp or call tap"  AW-18160917926/Ect5COSNgaEdEKa75tND  value £60.
+     The enquiry counts when the form's POST to send-enquiry comes back OK. The
+     form lives inside the design bundle, so rather than edit it we watch
+     window.fetch, which survives the bundle's document swap; taps on any tel: or
+     WhatsApp link are caught by one click listener on document, which survives
+     it too. -->
 <script>(function(){
-  var SEND_TO='AW-18160917926/Ect5COSNgaEdEKa75tND';
-  var f0=window.fetch; if(!f0||f0.__abcConv)return;
-  var wrapped=function(input,init){
-    var p=f0.apply(this,arguments);
-    try{
-      var url=typeof input==='string'?input:(input&&input.url)||'';
-      var method=((init&&init.method)||(input&&input.method)||'GET').toUpperCase();
-      if(method==='POST'&&/\/\.netlify\/functions\/send-enquiry/.test(url)){
-        p.then(function(r){try{if(r&&r.ok&&window.gtag)gtag('event','conversion',{send_to:SEND_TO,value:120.0,currency:'GBP'});}catch(e){}},function(){});
-      }
-    }catch(e){}
-    return p;
-  };
-  wrapped.__abcConv=true; window.fetch=wrapped;
+  var ENQUIRY='AW-18160917926/MU0dCOGNgaEdEKa75tND', CONTACT='AW-18160917926/Ect5COSNgaEdEKa75tND';
+  function conv(sendTo,value){try{if(typeof gtag==='function')gtag('event','conversion',{send_to:sendTo,value:value,currency:'GBP'});}catch(e){}}
+  var f0=window.fetch;
+  if(f0&&!f0.__abcConv){
+    var wrapped=function(input,init){
+      var p=f0.apply(this,arguments);
+      try{
+        var url=typeof input==='string'?input:(input&&input.url)||'';
+        var method=((init&&init.method)||(input&&input.method)||'GET').toUpperCase();
+        if(method==='POST'&&/\/\.netlify\/functions\/send-enquiry/.test(url)){
+          p.then(function(r){if(r&&r.ok)conv(ENQUIRY,120.0);},function(){});
+        }
+      }catch(e){}
+      return p;
+    };
+    wrapped.__abcConv=true; window.fetch=wrapped;
+  }
+  if(!window.__abcContactConv){
+    window.__abcContactConv=true;
+    document.addEventListener('click',function(e){try{
+      var a=e.target&&e.target.closest&&e.target.closest('a[href]');if(!a)return;
+      var h=a.getAttribute('href')||'';
+      if(/^tel:/i.test(h)||/(^|\/\/)(wa\.me|api\.whatsapp\.com|wa\.link)\b/i.test(h)||/^whatsapp:/i.test(h))conv(CONTACT,60.0);
+    }catch(x){}},true);
+  }
 })();</script>
 <script>(function(){
   // The design bundle replaces the whole <html> on hydration, which removes a
