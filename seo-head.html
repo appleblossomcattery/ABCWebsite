@@ -73,6 +73,27 @@
   gtag('js', new Date());
   gtag('config', 'AW-18160917926');
 </script>
+<!-- Google Ads conversion: "Website enquiry" (Goals > Conversions, created
+     19 Oct 2026). Counted when the enquiry form's POST to send-enquiry comes
+     back OK. The form lives inside the design bundle, so rather than edit it we
+     watch window.fetch, which survives the bundle's document swap. Value £120 =
+     average booking (£188) x share of enquiries won (64%), CatBooker, Oct 2026. -->
+<script>(function(){
+  var SEND_TO='AW-18160917926/Ect5COSNgaEdEKa75tND';
+  var f0=window.fetch; if(!f0||f0.__abcConv)return;
+  var wrapped=function(input,init){
+    var p=f0.apply(this,arguments);
+    try{
+      var url=typeof input==='string'?input:(input&&input.url)||'';
+      var method=((init&&init.method)||(input&&input.method)||'GET').toUpperCase();
+      if(method==='POST'&&/\/\.netlify\/functions\/send-enquiry/.test(url)){
+        p.then(function(r){try{if(r&&r.ok&&window.gtag)gtag('event','conversion',{send_to:SEND_TO,value:120.0,currency:'GBP'});}catch(e){}},function(){});
+      }
+    }catch(e){}
+    return p;
+  };
+  wrapped.__abcConv=true; window.fetch=wrapped;
+})();</script>
 <script>(function(){
   // The design bundle replaces the whole <html> on hydration, which removes a
   // plain <script src> from the head — gtag() then queues into dataLayer and
