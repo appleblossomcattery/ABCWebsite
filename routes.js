@@ -27,9 +27,11 @@ const ROUTES = [
   {
     hash: '#/',
     path: '/',
-    title: 'Apple Blossom Cattery - Luxury Cat Boarding in Talygarn, Pontyclun',
+    // Leads with the brand, then the generic word people search ("cattery",
+    // 18 Oct 2026: top of the map pack but missing from the web results below it).
+    title: 'Apple Blossom Cattery | Cattery near Cardiff & Pontyclun',
     description:
-      'Award-winning, fully climate-controlled cat boarding in Talygarn, Pontyclun (Vale of Glamorgan). Family-run since 2019, rated 4.9★ on Google and recommended by local vets. Your cat, loved like our own.',
+      'Award-winning cattery in Talygarn, Pontyclun, minutes from Cardiff (M4 J34). Climate-controlled cat boarding, family-run since 2019, rated 4.9★ on Google. Loved like our own.',
     faq: true,
   },
   {
