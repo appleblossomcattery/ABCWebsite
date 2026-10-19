@@ -801,9 +801,10 @@ async function main() {
     .join('photos and videos during their stay, and a FaceTime call with your cat on request, so you know how your cat is getting on during your trip.');
 
   // Surface the review count in the headline rating stat (audit/eval: show
-  // "4.9★ from N reviews"). 69 matches the aggregateRating schema and the
-  // site's other stat ("69 Google reviews"), so it stays substantiable.
-  base = base.split('>Google &amp; Facebook reviews<').join('>from 69 Google reviews<');
+  // "4.9★ from N reviews"). Both stats take the count from FACTS, the same
+  // figure as the aggregateRating schema, so they cannot drift apart.
+  base = base.split('>Google &amp; Facebook reviews<').join(`>from ${FACTS.reviews} Google reviews<`);
+  base = base.split('>average across 69 Google reviews<').join(`>average across ${FACTS.reviews} Google reviews<`);
 
   // Lift Fees and FAQ into the top navigation and out of the Services dropdown.
   // Injected links match the sibling styling AND the active-state underline
