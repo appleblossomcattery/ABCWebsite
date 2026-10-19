@@ -46,7 +46,7 @@ const FACTS = {
   email: 'enquiries@appleblossomcattery.com',
   address: 'Cowbridge Road, Talygarn, Pontyclun CF72 9JU',
   rating: '4.9',
-  reviews: '71',
+  reviews: '78',
   yellVotes: '60',
   licence: 'BOE028',
 };
@@ -58,7 +58,7 @@ const AREAS = [
     region: 'Cowbridge & the Vale villages',
     title: 'Cattery near Cowbridge - Apple Blossom Cattery',
     description:
-      'Licensed, climate-controlled cat boarding about five miles from Cowbridge; we are on Cowbridge Road itself. More than 110 Cowbridge and Vale households board with us. Rated 4.9★ from 71 Google reviews.',
+      'Licensed, climate-controlled cat boarding about five miles from Cowbridge; we are on Cowbridge Road itself. More than 110 Cowbridge and Vale households board with us. Rated 4.9★ from ' + FACTS.reviews + ' Google reviews.',
     h1: 'Cattery & Cat Boarding near Cowbridge',
     households: 115,
     standfirst:
@@ -87,7 +87,7 @@ const AREAS = [
     region: 'Bridgend, Pencoed & Porthcawl',
     title: 'Cattery near Bridgend & Pencoed - Apple Blossom Cattery',
     description:
-      'Climate-controlled, licensed cat boarding about ten miles from Bridgend, one junction along the M4. Nearly 200 Bridgend-area households board with us. Rated 4.9★ from 71 Google reviews.',
+      'Climate-controlled, licensed cat boarding about ten miles from Bridgend, one junction along the M4. Nearly 200 Bridgend-area households board with us. Rated 4.9★ from ' + FACTS.reviews + ' Google reviews.',
     h1: 'Cattery & Cat Boarding near Bridgend',
     households: 196,
     standfirst:
@@ -116,7 +116,7 @@ const AREAS = [
     region: 'Cardiff & the western suburbs',
     title: 'Cattery near Cardiff, off M4 J34 - Apple Blossom Cattery',
     description:
-      'Cattery near Cardiff, just off M4 Junction 34: about twenty-five minutes from west Cardiff. Climate-controlled, licensed, 4.9★ from 71 Google reviews. Over 100 Cardiff households board with us.',
+      'Cattery near Cardiff, just off M4 Junction 34: about twenty-five minutes from west Cardiff. Climate-controlled, licensed, 4.9★ from ' + FACTS.reviews + ' Google reviews. Over 100 Cardiff households board with us.',
     h1: 'Cattery & Cat Boarding near Cardiff',
     households: 108,
     standfirst:
@@ -160,7 +160,7 @@ const AREAS = [
     region: 'Pontypridd, Church Village & Efail Isaf',
     title: 'Cattery near Pontypridd & Church Village - Apple Blossom Cattery',
     description:
-      'Licensed, climate-controlled cat boarding about twenty minutes from Pontypridd on the A473. More than 70 Pontypridd-area households board with us. Rated 4.9★ from 71 Google reviews.',
+      'Licensed, climate-controlled cat boarding about twenty minutes from Pontypridd on the A473. More than 70 Pontypridd-area households board with us. Rated 4.9★ from ' + FACTS.reviews + ' Google reviews.',
     h1: 'Cattery & Cat Boarding near Pontypridd',
     households: 73,
     standfirst:
@@ -189,7 +189,7 @@ const AREAS = [
     region: 'Rhondda, Tonyrefail, Aberdare & Mountain Ash',
     title: 'Cattery for the Rhondda & Cynon Valleys - Apple Blossom Cattery',
     description:
-      'Licensed, climate-controlled cat boarding at the foot of the Rhondda, straight down the A4119. Around 160 valley households board with us, our second busiest area. 4.9★ from 71 Google reviews.',
+      'Licensed, climate-controlled cat boarding at the foot of the Rhondda, straight down the A4119. Around 160 valley households board with us, our second busiest area. 4.9★ from ' + FACTS.reviews + ' Google reviews.',
     h1: 'Cattery & Cat Boarding for the Rhondda & Cynon Valleys',
     households: 159,
     standfirst:
@@ -218,7 +218,7 @@ const AREAS = [
     region: 'Barry, Penarth & Llantwit Major',
     title: 'Cattery near Barry, Penarth & Llantwit Major - Apple Blossom Cattery',
     description:
-      'Climate-controlled, licensed cat boarding about twenty-five minutes from Barry, and ten miles from Cardiff Airport. Rated 4.9★ from 71 Google reviews.',
+      'Climate-controlled, licensed cat boarding about twenty-five minutes from Barry, and ten miles from Cardiff Airport. Rated 4.9★ from ' + FACTS.reviews + ' Google reviews.',
     h1: 'Cattery & Cat Boarding near Barry & the Vale Coast',
     households: 61,
     standfirst:
@@ -247,7 +247,7 @@ const AREAS = [
     region: 'Pontyclun, Llantrisant, Talbot Green & Miskin',
     title: 'Cattery in Pontyclun, Llantrisant & Talbot Green - Apple Blossom Cattery',
     description:
-      'Your local cattery: purpose-built, climate-controlled cat boarding minutes from Llantrisant, Talbot Green and Pontyclun. Over 300 local households board with us. 4.9★ from 71 Google reviews.',
+      'Your local cattery: purpose-built, climate-controlled cat boarding minutes from Llantrisant, Talbot Green and Pontyclun. Over 300 local households board with us. 4.9★ from ' + FACTS.reviews + ' Google reviews.',
     h1: 'Cattery & Cat Boarding in Pontyclun, Llantrisant & Talbot Green',
     households: 312,
     standfirst:
@@ -264,7 +264,7 @@ const AREAS = [
       h2: 'The cattery your neighbours use',
       paras: [
         'A third of everyone on our books lives within a few miles of the cattery. In a village you only get that through word of mouth, and you would lose it just as fast if you let people down.',
-        'We are licensed and inspected by the Vale of Glamorgan Animal Welfare team (Animal Boarding Licence no. BOE028), fully insured, and members of the Pet Industry Federation. Rated 4.9 out of 5 from 71 Google reviews and 5 out of 5 from 60 reviews on Yell.',
+        'We are licensed and inspected by the Vale of Glamorgan Animal Welfare team (Animal Boarding Licence no. BOE028), fully insured, and members of the Pet Industry Federation. Rated 4.9 out of 5 from ' + FACTS.reviews + ' Google reviews and 5 out of 5 from 60 reviews on Yell.',
         'If you have not been up before, come and look round; most of our neighbours did exactly that before their first booking.',
       ],
     },
