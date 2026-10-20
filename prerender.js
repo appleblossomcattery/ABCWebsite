@@ -47,7 +47,6 @@ const crypto = require('crypto');
 const puppeteer = require('puppeteer');
 const sharp = require('sharp');
 const zlib = require('zlib');
-const mammoth = require('mammoth');
 const { injectSeoHead } = require('./postbuild');
 const { BASE_URL, ROUTES } = require('./routes');
 const { AREAS, FACTS } = require('./areas');
@@ -1185,52 +1184,32 @@ function write404() {
 // ---- policies page ---------------------------------------------------------
 // The published policies PDF is a designed, image-based export with no text
 // layer, so search engines and screen readers get nothing from it. The
-// canonical machine-readable version is this generated page: at build time the
-// Word master (documents/apple-blossom-policies.docx — kept OUT of the
-// published site) is converted to semantic HTML via mammoth and wrapped in a
-// branded, indexable page at /policies/, which also offers the designed PDF
-// as the download. Replace the .docx (same filename) alongside the PDF when a
-// new edition is issued and both stay in step.
+// canonical machine-readable version is this generated page. Its body is
+// policies-content.html, built from the Word master
+// (documents/apple-blossom-policies.docx, kept OUT of the published site) by
+// scripts/build-policies.py, which reads the document's procedures, steps,
+// call-outs and risk table and leaves out the print edition's margin clause
+// references and the vet authorisation form (FORM 01, in the PDF only).
+// Replace the .docx and the PDF together when a new edition is issued, then
+// run the script; the build warns if the docx has changed since it last ran.
 async function buildPoliciesPage() {
   const docx = path.join(ROOT, 'documents', 'apple-blossom-policies.docx');
-  if (!fs.existsSync(docx)) { console.warn('  policies: docx master missing — /policies/ page NOT generated'); return; }
-  let { value: body } = await mammoth.convertToHtml({ path: docx });
-
-  // The manual ends with the blank Veterinary Treatment Authorisation form
-  // (FORM 01). It stays in the designed PDF download but is deliberately NOT
-  // published on the web page — it's a signature document completed at
-  // book-in, not something to print-and-fill from the web. References to
-  // "Form 01" elsewhere in the manual remain. Cut from the form's start
-  // marker to the end (which also drops a garbled converted page-footer);
-  // fail the build if the marker moves so the form can't silently reappear.
-  const formCut = body.search(/<p>[^<]*FORM 01<\/p>/);
-  if (formCut === -1) {
-    throw new Error('buildPoliciesPage: "FORM 01" start marker not found — confirm the vet authorisation form is still excluded from /policies/');
+  const content = path.join(ROOT, 'policies-content.html');
+  if (!fs.existsSync(content)) { console.warn('  policies: policies-content.html missing — /policies/ page NOT generated'); return; }
+  let body = fs.readFileSync(content, 'utf8');
+  const madeFrom = (body.match(/docx-sha256: ([0-9a-f]{64})/) || [])[1];
+  if (fs.existsSync(docx) && madeFrom !== crypto.createHash('sha256').update(fs.readFileSync(docx)).digest('hex')) {
+    console.warn('  policies: WARNING the docx has changed since policies-content.html was built — run python3 scripts/build-policies.py');
   }
-  body = body.slice(0, formCut);
-
-  // Strip conversion artefacts that leaked from the designed document's page
-  // furniture into the docx body: stray "RA01" margin badges, and repeated
-  // page-footer lines (script-font strapline came through as mojibake + the
-  // address/licence line). The index row "RA 01" (spaced) and prose licence
-  // mentions ("licence no. BOE028") don't match these patterns and remain.
-  body = body.replace(/<p>RA01<\/p>/g, '');
-  body = body.replace(/<p>---[^<]*<\/p>/g, ''); // "--- SOP 05" page-break markers
-  // Leaked page-footer paragraphs (may carry the strapline as an inline
-  // <img>, so allow tags before the licence text). Exact-case "Licence
-  // BOE028" is the footer format; prose says "licence no. BOE028".
-  body = body.replace(/<p>(?:(?!<\/p>)[\s\S])*?Licence BOE028[^<]*<\/p>/g, '');
-
-  // Exactly one <h1> per page (the page title below); demote the document's
-  // own heading levels one step so the outline nests under it. Full chain
-  // deepest-first — the docx natively uses h4s too, so a partial shift would
-  // collide two levels.
-  body = body
-    .replace(/<(\/?)h5\b/g, '<$1h6')
-    .replace(/<(\/?)h4\b/g, '<$1h5')
-    .replace(/<(\/?)h3\b/g, '<$1h4')
-    .replace(/<(\/?)h2\b/g, '<$1h3')
-    .replace(/<(\/?)h1\b/g, '<$1h2');
+  let cover = [];
+  try { cover = JSON.parse((body.match(/<!-- cover: ([\s\S]*?) -->/) || [])[1].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')); } catch { /* the standard standfirst below */ }
+  body = body.replace(/<!--[\s\S]*?-->\n?/g, '');
+  if (/T&amp;C\s*\d|T&C\s*\d/.test(body)) throw new Error('buildPoliciesPage: a T&C clause reference reached the page body');
+  if (/FORM 01|Veterinary Treatment Authorisation<\/h2>/.test(body)) throw new Error('buildPoliciesPage: the vet authorisation form reached the page body');
+  const escTxt = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const standfirst = cover.length
+    ? cover.map((p) => `<p class="standfirst">${escTxt(p)}</p>`).join('\n')
+    : '<p class="standfirst">Everything we do with your cat, written down: how a cat is booked in, fed, cleaned around, watched over and handed back, together with our risk assessment and privacy notice. We publish it because we have nothing to hide.</p>';
 
   const textChars = body.replace(/<[^>]+>/g, '').length;
   if (textChars < 10000) throw new Error(`buildPoliciesPage: conversion produced only ${textChars} chars — refusing to publish a truncated policies page`);
@@ -1258,6 +1237,7 @@ async function buildPoliciesPage() {
   .eyebrow { font-family:'Quicksand',sans-serif; font-weight:600; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:#9B4880; margin-bottom:8px; }
   .pagetitle { font-family:'Quicksand',sans-serif; font-weight:700; font-size:clamp(30px,5vw,42px); color:#46474A; line-height:1.1; margin-bottom:10px; }
   .standfirst { font-size:16.5px; line-height:1.6; color:#56565A; max-width:640px; }
+  .standfirst + .standfirst { margin-top:10px; }
   .pdfcard { display:flex; align-items:center; gap:14px; background:#fff; border:1px solid #ECE0E7; border-radius:18px; padding:18px 20px; margin:26px 0 8px; }
   .pdfcard a { color:#9B4880; font-family:'Quicksand',sans-serif; font-weight:700; text-decoration:none; font-size:15px; }
   .pdfcard small { display:block; color:#7C7D81; font-size:13px; margin-top:2px; }
@@ -1276,6 +1256,31 @@ async function buildPoliciesPage() {
   article img { max-width:100%; height:auto; }
   article a { color:#9B4880; }
   article strong { color:#3A3B3E; }
+  article .sop { padding-top:34px; margin-top:34px; border-top:1px solid #ECE0E7; scroll-margin-top:16px; }
+  article .eyebrow { margin-bottom:4px; }
+  article .sop h2 { margin:0 0 12px; }
+  article .lead { font-size:16px; color:#56565A; }
+  article .facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px 18px; background:#FBF7F4; border:1px solid #ECE0E7; border-radius:14px; padding:14px 16px; margin:16px 0 8px; font-size:14.5px; line-height:1.45; }
+  article .facts span { display:block; font-family:'Quicksand',sans-serif; font-weight:700; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#9B4880; margin-bottom:3px; }
+  article .facts.cover { margin:0 0 28px; }
+  article ol.steps { list-style:none; margin:0 0 16px; }
+  article ol.steps li { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #F3EAEF; margin:0; }
+  article ol.steps li:last-child { border-bottom:0; }
+  article ol.steps .n { flex:none; min-width:30px; font-family:'Quicksand',sans-serif; font-weight:700; font-size:13px; color:#B57AA0; padding-top:2px; }
+  article .note { background:#FBEEF4; border:1px solid #F0D8E4; border-radius:16px; padding:16px 20px; margin:18px 0; }
+  article .note h3, article .note h4 { margin:0 0 6px; color:#7C3A66; font-size:16px; }
+  article .note p { margin:0 0 8px; font-size:15px; }
+  article .note p:last-child { margin-bottom:0; }
+  article .risk { border:1px solid #ECE0E7; border-radius:16px; padding:14px 18px 6px; margin:14px 0; }
+  article .risk h3 { margin:0 0 2px; font-size:18px; color:#46474A; }
+  article .risk .rating { font-size:13.5px; color:#7C7D81; margin:0 0 8px; }
+  article .risk .rating b { color:#9B4880; }
+  article ol.toc { list-style:none; margin:0 0 24px; columns:2 300px; column-gap:28px; }
+  article ol.toc li { break-inside:avoid; margin:0 0 8px; font-size:15px; line-height:1.35; }
+  article ol.toc a { text-decoration:none; color:#46474A; font-weight:600; }
+  article ol.toc a:hover { color:#9B4880; }
+  article ol.toc .ref { display:inline-block; min-width:62px; font-family:'Quicksand',sans-serif; font-weight:700; font-size:12.5px; color:#9B4880; }
+  article ol.toc small { display:block; margin-left:62px; color:#8A8B8F; font-size:12.5px; }
   footer { text-align:center; padding:0 24px 50px; font-size:14px; color:#8A8B8F; }
   footer a { color:#9B4880; font-weight:600; }
 </style>`;
@@ -1290,7 +1295,7 @@ async function buildPoliciesPage() {
   const page = '<!DOCTYPE html>\n<html lang="en">\n<head>\n' + head + '\n</head>\n<body>\n' +
     '<div class="top"><a href="/"><svg width="26" height="26" viewBox="0 0 400 400" aria-hidden="true"><g transform="translate(200,196)"><circle cx="0" cy="-48" r="35" fill="#E89BC0"/><circle cx="46" cy="-15" r="35" fill="#CE6D9E"/><circle cx="28" cy="39" r="35" fill="#C58AB0"/><circle cx="-28" cy="39" r="35" fill="#E89BC0"/><circle cx="-46" cy="-15" r="35" fill="#F3C4DA"/><circle cx="0" cy="-4" r="21" fill="#9B4880"/></g></svg>Apple Blossom Cattery</a></div>\n' +
     '<main>\n<div class="eyebrow">Operations Manual · 2026 Edition</div>\n<h1 class="pagetitle">Policies &amp; Procedures</h1>\n' +
-    '<p class="standfirst">Everything we do with your cat, written down: how a cat is booked in, fed, cleaned around, watched over and handed back, together with our risk assessment and privacy notice. We publish it because we have nothing to hide.</p>\n' +
+    standfirst + '\n' +
     '<div class="pdfcard"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#9B4880" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><div><a href="/documents/apple-blossom-policies.pdf' + pdfVersion + '" target="_blank" rel="noopener">Download the designed print edition</a><small>PDF, 15&nbsp;MB; the same document, laid out for print</small></div></div>\n' +
     '<article>\n' + body + '\n</article>\n</main>\n' +
     '<footer>Apple Blossom Cattery, Cowbridge Road, Talygarn, Pontyclun CF72 9JU · <a href="/">appleblossomcattery.com</a> · <a href="/contact/">Contact us</a></footer>\n' +
@@ -1299,7 +1304,7 @@ async function buildPoliciesPage() {
   const outDir = path.join(DIST, 'policies');
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'index.html'), page);
-  console.log(`  policies: /policies/ generated from the docx master (${(textChars / 1000).toFixed(1)}k chars of indexable text)`);
+  console.log(`  policies: /policies/ generated from policies-content.html (${(textChars / 1000).toFixed(1)}k chars of indexable text)`);
 }
 
 // ---- service-area pages ----------------------------------------------------
