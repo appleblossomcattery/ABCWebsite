@@ -816,7 +816,7 @@ async function main() {
   const pdfLink = (href, label) => `<a href=\\"${href}\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"color:#9B4880;font-weight:600\\">${label}<\\u002Fa>`;
   if (base.split(termsEdition).length === 2) {
     base = base.replace(termsEdition, termsEdition +
-      `<p style=\\"font-size:14px;color:#7C7D81;margin:8px 0 0\\">${pdfLink('\\u002Fdocuments\\u002Fapple-blossom-terms-2026.pdf', 'Download the 2026 edition (PDF)')} · ${pdfLink('\\u002Fdocuments\\u002Fapple-blossom-terms-2027.pdf', '2027 edition, from 1 July 2027 (PDF)')}<\\u002Fp>`);
+      `<p style=\\"font-size:14px;color:#7C7D81;margin:8px 0 0\\">${pdfLink('\\u002Fdocuments\\u002Fapple-blossom-terms-2026.pdf', 'Download the terms (PDF)')}<\\u002Fp>`);
     console.log('  terms: added PDF download links');
   } else {
     console.warn('  terms: edition line not unique — PDF links skipped');
@@ -928,7 +928,6 @@ async function main() {
   // pulls into Documents (its sync-documents function), so the T&Cs attached to
   // booking emails are always the edition published here.
   copyIfExists('documents/apple-blossom-terms-2026.pdf', 'documents/apple-blossom-terms-2026.pdf');
-  copyIfExists('documents/apple-blossom-terms-2027.pdf', 'documents/apple-blossom-terms-2027.pdf');
   await buildPoliciesPage();
   buildAreaPages();
   base = await buildGallery(base);
