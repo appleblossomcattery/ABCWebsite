@@ -806,6 +806,20 @@ async function main() {
   base = base.split('>Google &amp; Facebook reviews<').join(`>from ${FACTS.reviews} Google reviews<`);
   base = base.split('>average across 69 Google reviews<').join(`>average across ${FACTS.reviews} Google reviews<`);
 
+  // Payment: cash or bank transfer on collection (owner, 20 Oct 2026). Bank
+  // details are given on request only, so transfers stay a checkout-day
+  // option rather than something paid ahead and chased in the bank account.
+  // Same wording as the T&Cs PDFs and CatBooker's invoices. Each swap warns
+  // if the bundle text has moved, so a missed one is visible in the build log.
+  for (const [from, to] of [
+    ['>Cash only; we have no card facility at present.<', '>Cash or bank transfer on collection (bank details on request). We have no card facility at present.<'],
+    ['is due in cash on collection. Where an account', 'is due on collection of the Cat, in cash or by bank transfer (bank details on request). Where an account'],
+    ['\\"paymentAccepted\\": \\"Cash\\"', '\\"paymentAccepted\\": \\"Cash, Bank transfer\\"'],
+  ]) {
+    if (base.includes(from)) base = base.split(from).join(to);
+    else console.warn(`  payment: "${from.slice(0, 40)}…" not found (left as-is)`);
+  }
+
   // Lift Fees and FAQ into the top navigation and out of the Services dropdown.
   // Injected links match the sibling styling AND the active-state underline
   // (an sc-if on {{isFees}}/{{isFaq}}, which the bundle already computes), so
