@@ -811,6 +811,17 @@ async function main() {
   // option rather than something paid ahead and chased in the bank account.
   // Same wording as the T&Cs PDFs and CatBooker's invoices. Each swap warns
   // if the bundle text has moved, so a missed one is visible in the build log.
+  // Terms page: offer the designed PDF of each edition beside the web text.
+  const termsEdition = '<p style=\\"font-size:15px;color:#7C7D81;margin:0\\">2026 edition<\\u002Fp>';
+  const pdfLink = (href, label) => `<a href=\\"${href}\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"color:#9B4880;font-weight:600\\">${label}<\\u002Fa>`;
+  if (base.split(termsEdition).length === 2) {
+    base = base.replace(termsEdition, termsEdition +
+      `<p style=\\"font-size:14px;color:#7C7D81;margin:8px 0 0\\">${pdfLink('\\u002Fdocuments\\u002Fapple-blossom-terms-2026.pdf', 'Download the 2026 edition (PDF)')} · ${pdfLink('\\u002Fdocuments\\u002Fapple-blossom-terms-2027.pdf', '2027 edition, from 1 July 2027 (PDF)')}<\\u002Fp>`);
+    console.log('  terms: added PDF download links');
+  } else {
+    console.warn('  terms: edition line not unique — PDF links skipped');
+  }
+
   for (const [from, to] of [
     ['>Cash only; we have no card facility at present.<', '>Cash or bank transfer on collection (bank details on request). We have no card facility at present.<'],
     ['is due in cash on collection. Where an account', 'is due on collection of the Cat, in cash or by bank transfer (bank details on request). Where an account'],
@@ -913,6 +924,11 @@ async function main() {
   // The vaccination wall chart — the exact acceptance list the front desk uses,
   // published for owners and linked from the Vaccinations & Health page.
   copyIfExists('documents/apple-blossom-vaccination-chart.pdf', 'documents/apple-blossom-vaccination-chart.pdf');
+  // The designed T&Cs, one PDF per edition. These are the masters CatBooker
+  // pulls into Documents (its sync-documents function), so the T&Cs attached to
+  // booking emails are always the edition published here.
+  copyIfExists('documents/apple-blossom-terms-2026.pdf', 'documents/apple-blossom-terms-2026.pdf');
+  copyIfExists('documents/apple-blossom-terms-2027.pdf', 'documents/apple-blossom-terms-2027.pdf');
   await buildPoliciesPage();
   buildAreaPages();
   base = await buildGallery(base);
