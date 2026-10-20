@@ -51,6 +51,9 @@ const mammoth = require('mammoth');
 const { injectSeoHead } = require('./postbuild');
 const { BASE_URL, ROUTES } = require('./routes');
 const { AREAS, FACTS } = require('./areas');
+const { TERMS_API, TERMS_PDF, currentTerms, longDate } = require('./terms');
+/** The T&Cs edition baked into this build (set in main); the browser checks it is still the one in force. */
+let TERMS = null;
 const SEASONAL = require('./seasonal');
 
 const ROOT = __dirname;
@@ -510,12 +513,39 @@ function seasonalBannerScript() {
 })();</script>`;
 }
 
+// The Terms page asks CatBooker which edition is in force and, if it is newer
+// than the one baked in, swaps in its text. So 1 July's new terms appear that
+// morning even if the site has not been rebuilt. Asked once per visit, and the
+// app's own re-renders are followed the same way as the seasonal banner.
+function termsLiveScript() {
+  const cfg = JSON.stringify({ api: TERMS_API, ed: TERMS.edition });
+  return `<script>(function(){
+  var C=${cfg},got=null,asked=false;
+  function onTerms(){return /^#\\/terms/.test(location.hash)||/^\\/terms\\/?$/.test(location.pathname);}
+  function fmt(d){try{return new Date(d+'T12:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'});}catch(e){return d;}}
+  function apply(){try{
+    if(!got||got.edition===C.ed||!onTerms())return;
+    var b=document.getElementById('abc-terms-body'),e=document.getElementById('abc-terms-edition');
+    if(!b||b.getAttribute('data-edition')===got.edition)return;
+    b.innerHTML=got.html;b.setAttribute('data-edition',got.edition);
+    if(e)e.textContent=got.edition+' edition · in force from '+fmt(got.from);
+  }catch(x){}}
+  function ask(){if(asked||!onTerms())return;asked=true;
+    try{fetch(C.api,{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(t){if(t&&t.edition&&t.html){got=t;apply();}}).catch(function(){});}catch(x){}}
+  function tick(){ask();apply();}
+  window.addEventListener('hashchange',tick,true);
+  window.addEventListener('load',tick,true);
+  setInterval(tick,1000);
+  tick();
+})();</script>`;
+}
+
 // ---- per-route page assembly ----------------------------------------------
 function assemble(base, r, dcRootHtml) {
   let html = applyRouteHead(base, r);
   // Persist + floating-WhatsApp scripts go first inside <head> so they register
   // (on window) before the bundle swaps the document.
-  html = html.replace(/<head[^>]*>/i, (m) => m + '\n' + persistScript() + '\n' + floatingContactScript() + '\n' + seasonalBannerScript());
+  html = html.replace(/<head[^>]*>/i, (m) => m + '\n' + persistScript() + '\n' + floatingContactScript() + '\n' + seasonalBannerScript() + '\n' + termsLiveScript());
   // Remove the splash thumbnail so no-JS crawlers/users see real content, not a
   // logo. The thumbnail div holds only an <svg> (no nested div), so match up to
   // its SINGLE closing </div>. (Matching "</div></div>" over-ran to a far-away
@@ -592,6 +622,7 @@ async function main() {
   const srcIndex = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const seoHead = fs.readFileSync(path.join(ROOT, 'seo-head.html'), 'utf8');
   let base = migrateImages(injectSeoHead(srcIndex, seoHead));
+  TERMS = await currentTerms();
   // Normalise the served host to the apex everywhere (the design bundle
   // hard-codes www in its own head/JSON-LD; the server 301s www → apex, so
   // canonical/og/schema must all point at the apex, including post-hydration).
@@ -811,20 +842,29 @@ async function main() {
   // option rather than something paid ahead and chased in the bank account.
   // Same wording as the T&Cs PDFs and CatBooker's invoices. Each swap warns
   // if the bundle text has moved, so a missed one is visible in the build log.
-  // Terms page: offer the designed PDF of each edition beside the web text.
-  const termsEdition = '<p style=\\"font-size:15px;color:#7C7D81;margin:0\\">2026 edition<\\u002Fp>';
-  const pdfLink = (href, label) => `<a href=\\"${href}\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"color:#9B4880;font-weight:600\\">${label}<\\u002Fa>`;
-  if (base.split(termsEdition).length === 2) {
-    base = base.replace(termsEdition, termsEdition +
-      `<p style=\\"font-size:14px;color:#7C7D81;margin:8px 0 0\\">${pdfLink('\\u002Fdocuments\\u002Fapple-blossom-terms-2026.pdf', 'Download the terms (PDF)')}<\\u002Fp>`);
-    console.log('  terms: added PDF download links');
-  } else {
-    console.warn('  terms: edition line not unique — PDF links skipped');
+  // Terms page: the edition in force (terms.js), word for word as its PDF,
+  // with that PDF as the download. The section and edition line get ids so the
+  // browser can swap in a newer edition on its first day (termsLiveScript).
+  {
+    const enc = (h) => JSON.stringify(h).slice(1, -1).replace(/<\//g, '<\\u002F');
+    const h1 = 'Terms &amp; Conditions of Boarding<\\u002Fh1>';
+    const edLine = '<p style=\\"font-size:15px;color:#7C7D81;margin:0\\">2026 edition<\\u002Fp>';
+    const open = '<section style=\\"max-width:860px;margin:0 auto;padding:52px 24px 72px\\">';
+    const at = base.indexOf(h1);
+    const e0 = base.indexOf(edLine, at);
+    const s0 = base.indexOf(open, at);
+    const s1 = s0 < 0 ? -1 : base.indexOf('<\\u002Fsection>', s0);
+    if (at < 0 || e0 < 0 || e0 > s0 || s0 < 0 || s1 < 0) throw new Error('prerender: Terms page markup not found — the terms text and download would be out of date');
+    const edition = enc(`<p id="abc-terms-edition" style="font-size:15px;color:#7C7D81;margin:0">${TERMS.edition} edition · in force from ${longDate(TERMS.from)}</p>`
+      + `<p style="font-size:14px;color:#7C7D81;margin:8px 0 0"><a href="/documents/terms.pdf" target="_blank" rel="noopener" style="color:#9B4880;font-weight:600">Download the terms (PDF)</a></p>`);
+    const body = enc(`<section id="abc-terms-body" data-edition="${TERMS.edition}" style="max-width:860px;margin:0 auto;padding:52px 24px 72px">\n${TERMS.html}\n`);
+    base = base.slice(0, e0) + edition + base.slice(e0 + edLine.length, s0) + body + base.slice(s1);
+    console.log(`  terms: page set to the ${TERMS.edition} edition`);
   }
+
 
   for (const [from, to] of [
     ['>Cash only; we have no card facility at present.<', '>Cash or bank transfer on collection (bank details on request). We have no card facility at present.<'],
-    ['is due in cash on collection. Where an account', 'is due on collection of the Cat, in cash or by bank transfer (bank details on request). Where an account'],
     ['\\"paymentAccepted\\": \\"Cash\\"', '\\"paymentAccepted\\": \\"Cash, Bank transfer\\"'],
   ]) {
     if (base.includes(from)) base = base.split(from).join(to);
@@ -924,10 +964,8 @@ async function main() {
   // The vaccination wall chart — the exact acceptance list the front desk uses,
   // published for owners and linked from the Vaccinations & Health page.
   copyIfExists('documents/apple-blossom-vaccination-chart.pdf', 'documents/apple-blossom-vaccination-chart.pdf');
-  // The designed T&Cs, one PDF per edition. These are the masters CatBooker
-  // pulls into Documents (its sync-documents function), so the T&Cs attached to
-  // booking emails are always the edition published here.
-  copyIfExists('documents/apple-blossom-terms-2026.pdf', 'documents/apple-blossom-terms-2026.pdf');
+  // The T&Cs PDF is not a file here: /documents/terms.pdf is proxied to
+  // CatBooker, which serves the edition in force (see writeRedirects, terms.js).
   await buildPoliciesPage();
   buildAreaPages();
   base = await buildGallery(base);
@@ -1078,6 +1116,11 @@ function writeRedirects() {
     '/terms                /terms/             301',
     '/privacy              /privacy/           301',
     '/policies             /policies/          301',
+    '# The T&Cs PDF in force today, served by CatBooker (terms.js). The old',
+    '# per-edition files are gone; their links land on the current terms.',
+    `/documents/terms.pdf  ${TERMS_PDF}  200`,
+    '/documents/apple-blossom-terms-2026.pdf  /documents/terms.pdf  301',
+    '/documents/apple-blossom-terms-2027.pdf  /terms/  301',
     '',
     '# Service-area pages (areas.js): no-slash → canonical trailing-slash path.',
     // NB explicit separators, not padEnd alone: these slugs are longer than the

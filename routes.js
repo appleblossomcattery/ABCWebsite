@@ -117,7 +117,7 @@ const ROUTES = [
     path: '/terms/',
     title: 'Terms & Conditions of Boarding - Apple Blossom Cattery',
     description:
-      'The 2026 terms and conditions of boarding for Apple Blossom Cattery, Talygarn, Vale of Glamorgan (CF72 9JU).',
+      'The terms and conditions of boarding in force at Apple Blossom Cattery, Talygarn, Vale of Glamorgan (CF72 9JU), with the full terms as a PDF.',
   },
   {
     hash: '#/privacy',
