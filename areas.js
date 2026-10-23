@@ -46,7 +46,7 @@ const FACTS = {
   email: 'enquiries@appleblossomcattery.com',
   address: 'Cowbridge Road, Talygarn, Pontyclun CF72 9JU',
   rating: '4.9',
-  reviews: '86',
+  reviews: '88',
   yellVotes: '60',
   licence: 'BOE028',
 };
