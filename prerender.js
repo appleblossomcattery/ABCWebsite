@@ -864,6 +864,8 @@ async function main() {
 
   for (const [from, to] of [
     ['>Cash only; we have no card facility at present.<', '>Cash on collection, or bank transfer on request. We have no card facility at present.<'],
+    // We do not post photos of the guests every day (owner, 25 Oct 2026): saying so would mislead.
+    [', updated with daily photos of our guests.<', ', where we share photos of some of our guests.<'],
     ['\\"paymentAccepted\\": \\"Cash\\"', '\\"paymentAccepted\\": \\"Cash, Bank transfer\\"'],
   ]) {
     if (base.includes(from)) base = base.split(from).join(to);
