@@ -863,7 +863,7 @@ async function main() {
 
 
   for (const [from, to] of [
-    ['>Cash only; we have no card facility at present.<', '>Cash or bank transfer on collection (bank details on request). We have no card facility at present.<'],
+    ['>Cash only; we have no card facility at present.<', '>Cash on collection, or bank transfer on request. We have no card facility at present.<'],
     ['\\"paymentAccepted\\": \\"Cash\\"', '\\"paymentAccepted\\": \\"Cash, Bank transfer\\"'],
   ]) {
     if (base.includes(from)) base = base.split(from).join(to);
