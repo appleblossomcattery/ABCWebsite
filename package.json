@@ -8,7 +8,7 @@
     "seo-head": "node postbuild.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "dependencies": {
     "mammoth": "^1.12.1",
