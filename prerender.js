@@ -240,7 +240,6 @@ function stripEmDashes(html) {
     ["feed your cat \u2014 and can you bring", "feed your cat, and can you bring"],
     ["climate-controlled environment \u2014 your cat will be safe", "climate-controlled environment: your cat will be safe"],
     ["in good hands \u2014 but don", "in good hands, but don"],
-    ["additional cleaning \u2014 \u00a350 for flea treatment", "additional cleaning: \u00a350 for flea treatment"],
     ["personal site visit \u2014 where you sign", "personal site visit, where you sign"],
     ["after which \u2014 if no further bookings have been received \u2014 it will be deleted", "after which, if no further bookings have been received, it will be deleted"],
     ["two-pen suites \u2014 the roomiest accommodation we offer.", "two-pen suites, the roomiest accommodation we offer."],
@@ -942,6 +941,24 @@ async function main() {
       .join('minmax(190px,1fr));gap:16px\\" class=\\"abc-4col\\"');
   } else {
     console.warn('  home: feature-strip anchor not found — skipped updates card');
+  }
+
+  // Address in the hero (owner request, Nov 2026): the full address and
+  // postcode were only visible in "Get in touch" at the foot of the page.
+  // Add a tappable directions link under the hero CTAs, above the stat strip,
+  // so the address is prominent on first paint and is also a homepage NAP
+  // signal for local search. Uses the maps URL already published in the
+  // LocalBusiness schema (hasMap).
+  const heroCtaEnd = 'Take a look around<\\u002Fa>\\n            <\\u002Fdiv>';
+  const heroAddress =
+    '\\n            <a href=\\"https://www.google.com/maps/dir/?api=1&amp;destination=51.505458,-3.409968\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"display:inline-flex;align-items:flex-start;gap:8px;margin-top:16px;font-size:15px;font-weight:600;line-height:1.5;color:#46474A;text-decoration:none\\" style-hover=\\"color:#9B4880\\">'
+    + '<svg width=\\"17\\" height=\\"17\\" sc-camel-view-box=\\"0 0 24 24\\" fill=\\"none\\" stroke=\\"#9B4880\\" stroke-width=\\"2\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\" style=\\"flex-shrink:0;margin-top:3px\\"><path d=\\"M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z\\"><\\u002Fpath><circle cx=\\"12\\" cy=\\"10\\" r=\\"3\\"><\\u002Fcircle><\\u002Fsvg>'
+    + 'Cowbridge Road, Talygarn, Pontyclun CF72 9JU<\\u002Fa>';
+  if (base.includes(heroCtaEnd)) {
+    base = base.split(heroCtaEnd).join(heroCtaEnd + heroAddress);
+    console.log('  home: address + postcode added to the hero (links to directions)');
+  } else {
+    console.warn('  home: hero CTA anchor not found — address line not added');
   }
 
   // Fresh dist; self-host the migrated images, build the folder-driven gallery
